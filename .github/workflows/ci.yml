@@ -38,6 +38,7 @@ jobs:
           echo "APP_DEBUG=true" >> .env
           echo "APP_URL=http://localhost" >> .env
           echo "LOG_CHANNEL=stack" >> .env
+          echo "APP_KEY=" >> .env
           echo "DB_CONNECTION=sqlite" >> .env # Using SQLite for faster CI tests
           echo "DB_DATABASE=database/database.sqlite" >> .env
 
