@@ -24,41 +24,37 @@ jobs:
           script: |
             echo "--- Starting Deployment on Server ---"
 
-            # Pull the latest Docker image from Docker Hub
             echo "Pulling latest Docker image: parisyashp31/guestbook-laravel:latest"
             docker pull parisyashp31/guestbook-laravel:latest
 
-            # Stop and remove any existing container named 'guestbook-app'
+            
             echo "Stopping and removing existing container (if running)..."
-            # '|| true' ensures the command doesn't fail the script if the container doesn't exist
             docker stop guestbook-app || true
             docker rm guestbook-app || true
 
-            # Run a new Docker container from the pulled image
+            
             echo "Running new container named 'guestbook-app'..."
             docker run -d \
               --name guestbook-app \
-              -p 80:80 \ # IMPORTANT: This maps port 80 on your *AWS EC2 instance* to port 80 in the container.
-                         # Ensure port 80 is *free* on your EC2 instance (not used by Apache/Nginx outside Docker).
-                         # If not free, change the first '80' to something else (e.g., -p 8080:80).
+              -p 80:80 \ 
               -e APP_NAME=Guestbook \
               -e APP_ENV=production \
               -e APP_DEBUG=false \
-              -e APP_URL=http://${{ secrets.SSH_HOST }} \ # Set your application's public URL here. Use your server's public IP from SSH_HOST.
-              -e APP_KEY=${{ secrets.APP_KEY }} \ # Laravel APP_KEY from GitHub Secret
+              -e APP_URL=http://${{ secrets.SSH_HOST }} \ 
+              -e APP_KEY=${{ secrets.APP_KEY }} \
               -e DB_CONNECTION=mysql \
-              -e DB_HOST=localhost \ # This tells Laravel in the container to connect to MySQL on the same EC2 instance.
-              -e DB_PORT=3306 \ # Standard MySQL port within the container.
-              -e DB_DATABASE=guestbook_db \ # Your database name (from local setup)
-              -e DB_USERNAME=user \ # Your database username
-              -e DB_PASSWORD=password \ # Your database password
-              parisyashp31/guestbook-laravel:latest # The Docker image to run
+              -e DB_HOST=localhost \ 
+              -e DB_PORT=3306 \ 
+              -e DB_DATABASE=guestbook_db \ 
+              -e DB_USERNAME=user \ 
+              -e DB_PASSWORD=password \ 
+              parisyashp31/guestbook-laravel:latest 
 
             echo "Waiting for the new container and database to fully start up (10 seconds)..."
-            sleep 10 # Gives time for services inside the container to initialize
+            sleep 10 
 
             echo "Running database migrations on the new container..."
-            # This executes the Laravel migrations inside the newly running application container.
+        
             docker exec guestbook-app php artisan migrate --force
 
             echo "--- Deployment Complete! ---"
