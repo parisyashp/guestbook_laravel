@@ -36,19 +36,19 @@ jobs:
             echo "Running new container named 'guestbook-app'..."
             docker run -d \
               --name guestbook-app \
-              -p 80:80 \ 
+              -p 80:80 \
               -e APP_NAME=Guestbook \
               -e APP_ENV=production \
               -e APP_DEBUG=false \
-              -e APP_URL=http://${{ secrets.SSH_HOST }} \ 
+              -e APP_URL=http://${{ secrets.SSH_HOST }} \
               -e APP_KEY=${{ secrets.APP_KEY }} \
               -e DB_CONNECTION=mysql \
-              -e DB_HOST=localhost \ 
-              -e DB_PORT=3306 \ 
-              -e DB_DATABASE=guestbook_db \ 
-              -e DB_USERNAME=user \ 
-              -e DB_PASSWORD=password \ 
-              parisyashp31/guestbook-laravel:latest 
+              -e DB_HOST=localhost \
+              -e DB_PORT=3306 \
+              -e DB_DATABASE=guestbook_db \
+              -e DB_USERNAME=user \
+              -e DB_PASSWORD=password \
+              parisyashp31/guestbook-laravel:latest
 
             echo "Waiting for the new container and database to fully start up (10 seconds)..."
             sleep 10 
