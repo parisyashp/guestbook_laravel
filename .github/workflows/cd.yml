@@ -37,10 +37,13 @@ jobs:
             docker stop guestbook-db || true
             docker rm guestbook-db || true
 
-            
+            echo "Creating custom Docker network 'guestbook-network'..."
+            docker network create guestbook-network || true
+
             echo "Running new database container named 'guestbook-db'..."
             docker run -d \
               --name guestbook-db \
+              --network guestbook-network \
               -p 3306:3306 \
               -e MYSQL_DATABASE=${{ secrets.DB_DATABASE }} \
               -e MYSQL_ROOT_PASSWORD=root_password \
@@ -52,6 +55,7 @@ jobs:
             echo "Running new application container named 'guestbook-app'..."
             docker run -d \
               --name guestbook-app \
+              --network guestbook-network \
               -p 80:80 \
               -e APP_NAME=Guestbook \
               -e APP_ENV=production \
