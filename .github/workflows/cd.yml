@@ -22,18 +22,34 @@ jobs:
 
           # The 'script' section contains the commands to be executed on your remote server
           script: |
-            echo "--- Starting Deployment on Server ---"
+           echo "--- Starting Deployment on Server ---"
 
-            echo "Pulling latest Docker image: parisyashp31/guestbook-laravel:latest"
+            echo "Pulling latest application Docker image: parisyashp31/guestbook-laravel:latest"
             docker pull parisyashp31/guestbook-laravel:latest
 
-            
-            echo "Stopping and removing existing container (if running)..."
+            echo "Pulling MySQL Docker image: mysql:8.0"
+            docker pull mysql:8.0
+
+        
+            echo "Stopping and removing existing containers (if running)..."
             docker stop guestbook-app || true
             docker rm guestbook-app || true
+            docker stop guestbook-db || true
+            docker rm guestbook-db || true
 
             
-            echo "Running new container named 'guestbook-app'..."
+            echo "Running new database container named 'guestbook-db'..."
+            docker run -d \
+              --name guestbook-db \
+              -p 3306:3306 \
+              -e MYSQL_DATABASE=${{ secrets.DB_DATABASE }} \
+              -e MYSQL_ROOT_PASSWORD=root_password \
+              -e MYSQL_USER=${{ secrets.DB_USERNAME }} \
+              -e MYSQL_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              mysql:8.0
+
+           
+            echo "Running new application container named 'guestbook-app'..."
             docker run -d \
               --name guestbook-app \
               -p 80:80 \
@@ -43,18 +59,19 @@ jobs:
               -e APP_URL=http://${{ secrets.SSH_HOST }} \
               -e APP_KEY=${{ secrets.APP_KEY }} \
               -e DB_CONNECTION=mysql \
-              -e DB_HOST=127.0.0.1 \
+              -e DB_HOST=guestbook-db \
               -e DB_PORT=3306 \
-              -e DB_DATABASE=guestbook_db \
-              -e DB_USERNAME=user \
-              -e DB_PASSWORD=password \
+              -e DB_DATABASE=${{ secrets.DB_DATABASE }} \
+              -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
+              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
               parisyashp31/guestbook-laravel:latest
 
-            echo "Waiting for the new container and database to fully start up (10 seconds)..."
-            sleep 10 
+            
+            echo "Waiting for both containers to fully start up (20 seconds for DB and app)..."
+            sleep 20
 
-            echo "Running database migrations on the new container..."
         
+            echo "Running database migrations on the new container..."
             docker exec guestbook-app php artisan migrate --force
 
             echo "--- Deployment Complete! ---"
