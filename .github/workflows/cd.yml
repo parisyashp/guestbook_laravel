@@ -13,6 +13,23 @@ jobs:
     environment: production # Designates this as a production deployment (useful for GitHub's UI)
 
     steps:
+      - name: Debug - List files in repository root and docker folder
+        run: |
+          echo "--- Listing files in GITHUB_WORKSPACE (repo root): ---"
+          ls -la ${{ github.workspace }}
+          echo ""
+          echo "--- Listing files in docker/: ---"
+          ls -la ${{ github.workspace }}/docker || echo "docker/ directory not found"
+          echo ""
+          echo "--- Listing files in docker/nginx/: ---"
+          ls -la ${{ github.workspace }}/docker/nginx || echo "docker/nginx/ directory not found or empty"
+          echo ""
+          echo "--- Attempting to cat docker-compose.yml: ---"
+          cat ${{ github.workspace }}/docker-compose.yml || echo "docker-compose.yml not found at root"
+          echo ""
+          echo "--- Attempting to cat docker/nginx/default.conf: ---"
+          cat ${{ github.workspace }}/docker/nginx/default.conf || echo "docker/nginx/default.conf not found"
+        
       - name: Copy Docker Compose files to Server
         uses: appleboy/scp-action@v1.0.0 # Action to copy files over SSH
         with:
