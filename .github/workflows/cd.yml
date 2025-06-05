@@ -19,7 +19,9 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "docker-compose.yml,docker/nginx/default.conf" # Files to copy
+          source: |
+            docker-compose.yml
+            docker/nginx/default.conf
           target: "/home/${{ secrets.SSH_USERNAME }}/guestbook_app"
       
       - name: Deploy Application with Docker Compose
