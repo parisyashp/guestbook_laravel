@@ -13,35 +13,7 @@ jobs:
     environment: production # Designates this as a production deployment (useful for GitHub's UI)
 
     steps:
-      - name: Debug - List files in repository root and docker folder
-        run: |
-          echo "--- Listing files in GITHUB_WORKSPACE (repo root): ---"
-          ls -la ${{ github.workspace }}
-          echo ""
-          echo "--- Listing files in docker/: ---"
-          ls -la ${{ github.workspace }}/docker || echo "docker/ directory not found"
-          echo ""
-          echo "--- Listing files in docker/nginx/: ---"
-          ls -la ${{ github.workspace }}/docker/nginx || echo "docker/nginx/ directory not found or empty"
-          echo ""
-          echo "--- Attempting to cat docker-compose.yml: ---"
-          cat ${{ github.workspace }}/docker-compose.yml || echo "docker-compose.yml not found at root"
-          echo ""
-          echo "--- Attempting to cat docker/nginx/default.conf: ---"
-          cat ${{ github.workspace }}/docker/nginx/default.conf || echo "docker/nginx/default.conf not found"
-        
-      - name: Copy Docker Compose files to Server
-        uses: appleboy/scp-action@v1.0.0 # Action to copy files over SSH
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: |
-            docker-compose.yml
-            docker/nginx/default.conf
-          target: "/home/${{ secrets.SSH_USERNAME }}/guestbook_app"
-      
-      - name: Deploy Application with Docker Compose
+      - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v1.0.0 # A popular GitHub Action for running commands over SSH
         with:
           host: ${{ secrets.SSH_HOST }}             # Uses the GitHub Secret for your server's IP address
@@ -52,23 +24,58 @@ jobs:
           script: |
            echo "--- Starting Deployment on Server ---"
 
-           mkdir -p /home/${{ secrets.SSH_USERNAME }}/guestbook_app
-           cd /home/${{ secrets.SSH_USERNAME }}/guestbook_app
+            echo "Pulling latest application Docker image: parisyashp31/guestbook-laravel:latest"
+            docker pull parisyashp31/guestbook-laravel:latest
 
-           echo "Pulling Docker Compose service images..."
-            docker compose pull
+            echo "Pulling MySQL Docker image: mysql:8.0"
+            docker pull mysql:8.0
+
         
             echo "Stopping and removing existing containers (if running)..."
-            docker compose down || true
+            docker stop guestbook-app || true
+            docker rm guestbook-app || true
+            docker stop guestbook-db || true
+            docker rm guestbook-db || true
 
-            echo "Bringing up new Docker Compose services..."
-            docker compose up -d
+            echo "Creating custom Docker network 'guestbook-network'..."
+            docker network create guestbook-network || true
 
-            echo "Waiting for containers to fully start up (30 seconds for all services)..."
-            sleep 30
+            echo "Running new database container named 'guestbook-db'..."
+            docker run -d \
+              --name guestbook-db \
+              --network guestbook-network \
+              -p 3306:3306 \
+              -e MYSQL_DATABASE=${{ secrets.DB_DATABASE }} \
+              -e MYSQL_ROOT_PASSWORD=root_password \
+              -e MYSQL_USER=${{ secrets.DB_USERNAME }} \
+              -e MYSQL_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              mysql:8.0
+
+           
+            echo "Running new application container named 'guestbook-app'..."
+            docker run -d \
+              --name guestbook-app \
+              --network guestbook-network \
+              -p 80:80 \
+              -e APP_NAME=Guestbook \
+              -e APP_ENV=production \
+              -e APP_DEBUG=false \
+              -e APP_URL=http://${{ secrets.SSH_HOST }} \
+              -e APP_KEY=${{ secrets.APP_KEY }} \
+              -e DB_CONNECTION=mysql \
+              -e DB_HOST=guestbook-db \
+              -e DB_PORT=3306 \
+              -e DB_DATABASE=${{ secrets.DB_DATABASE }} \
+              -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
+              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              parisyashp31/guestbook-laravel:latest
 
             
-            echo "Running database migrations on the application container..."
-            docker compose exec app php artisan migrate --force
+            echo "Waiting for both containers to fully start up (20 seconds for DB and app)..."
+            sleep 20
+
+        
+            echo "Running database migrations on the new container..."
+            docker exec guestbook-app php artisan migrate --force
 
             echo "--- Deployment Complete! ---"
