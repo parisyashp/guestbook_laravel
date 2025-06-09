@@ -63,9 +63,6 @@ COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Hapus konfigurasi Nginx default jika ada
-RUN rm /etc/nginx/conf.d/default.conf || true 
-
 # Expose port 80 untuk Nginx (Web Server)
 EXPOSE 80
 # Expose port 9000 untuk PHP-FPM (opsional, untuk debugging langsung ke FPM)
