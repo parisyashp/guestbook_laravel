@@ -1,86 +1,74 @@
 # .github/workflows/cd.yml
 name: Laravel CD Pipeline (Manual Deploy)
 
-# Workflow ini dapat dipicu secara manual dari UI GitHub Actions.
 on:
   workflow_dispatch:
-    # Tidak ada input yang didefinisikan untuk setup sederhana ini.
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest # Runner yang di-host GitHub untuk mengeksekusi perintah SSH
-    environment: production # Menetapkan ini sebagai deployment produksi (berguna untuk UI GitHub)
+    runs-on: ubuntu-latest
+    environment: production
 
     steps:
-      # Langkah KRUSIAL: Checkout kode ke workspace job ini
-      - name: Checkout code
+      - name: Checkout code # Tetap perlu untuk akses Dockerfile/konteks build di CI (walaupun tidak di CD)
         uses: actions/checkout@v4
 
-      # LANGKAH BARU: Menyalin Semua File Repository ke Server menggunakan rsync-action
-      # Ini menggantikan appleboy/scp-action dan lebih robust.
-      - name: Copy All Files to Server (rsync)
-        uses: burnett01/rsync-action@v1 # Action rsync untuk menyinkronkan file melalui SSH
-        with:
-          # Direktori sumber relatif terhadap root repository di runner. './' berarti salin semua.
-          src: './'
-          # Direktori tujuan di server remote. rsync akan membuatnya jika belum ada.
-          dest: '/home/${{ secrets.SSH_USERNAME }}/guestbook_app/'
-          # Host SSH, username, dan kunci diambil dari GitHub Secrets Anda.
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # Mengecualikan file/direktori yang TIDAK boleh disalin ke server
-          exclude: |
-            .git/            
-            .github/         
-            node_modules/    
-            vendor/          
-            .env             
-            .env.example     
-            *.log            
-            *.cache          
-            *.pem            
-          # Opsi rsync:
-          # -a: archive mode (mempertahankan izin, timestamp, dll.)
-          # -v: verbose output (menampilkan detail)
-          # -z: compress file data selama transfer
-          # --delete-after: menghapus file di tujuan yang tidak ada di sumber setelah transfer (sinkronisasi)
-          options: -avz --delete-after
-
-      # Langkah Deployment Utama: Sekarang file-file sudah ada di instance EC2!
-      - name: Deploy Application with Docker Compose
+      - name: Deploy Application Container
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "--- Memulai Deployment di Server dengan Docker Compose ---"
+            echo "--- Memulai Deployment di Server ---"
 
-            # Navigasi ke direktori aplikasi di EC2 tempat file disalin oleh rsync-action
-            # mkdir -p tidak diperlukan di sini karena rsync-action membuat direktori tujuan secara otomatis.
-            cd /home/${{ secrets.SSH_USERNAME }}/guestbook_app
+            # Pull image aplikasi "all-in-one" (sudah ada Nginx dan PHP-FPM)
+            echo "Pulling latest all-in-one application Docker image: your-dockerhub-username/guestbook-laravel:latest"
+            docker pull your-dockerhub-username/guestbook-laravel:latest
 
-            # 1. Pull semua image service yang didefinisikan dalam docker-compose.yml
-            # Ini memastikan kita mendapatkan image terbaru untuk aplikasi, nginx, dan mysql dari Docker Hub.
-            echo "Pulling image service Docker Compose..."
-            docker compose pull
+            # Pull image MySQL
+            echo "Pulling MySQL Docker image: mysql:8.0"
+            docker pull mysql:8.0
 
-            # 2. Hentikan dan hapus service yang sudah ada
-            echo "Menghentikan dan menghapus service Docker Compose yang ada (jika sedang berjalan)..."
-            # -v memastikan volume (seperti data DB) dihapus untuk awal yang bersih di setiap deployment.
-            docker compose down -v || true # '|| true' mengabaikan error jika service tidak berjalan
+            echo "Stopping and removing existing containers (if running)..."
+            docker stop guestbook-app || true
+            docker rm guestbook-app || true
+            docker stop guestbook-db || true
+            docker rm guestbook-db || true
 
-            # 3. Jalankan semua service baru dalam mode detached
-            echo "Menjalankan service Docker Compose baru..."
-            docker compose up -d
+            # Jalankan container database
+            echo "Running new database container named 'guestbook-db'..."
+            docker run -d \
+              --name guestbook-db \
+              -p 3306:3306 \
+              -e MYSQL_DATABASE=${{ secrets.DB_DATABASE }} \
+              -e MYSQL_ROOT_PASSWORD=root_password \
+              -e MYSQL_USER=${{ secrets.DB_USERNAME }} \
+              -e MYSQL_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              mysql:8.0
 
-            # 4. Tunggu container untuk sepenuhnya aktif
-            echo "Menunggu container aktif sepenuhnya (30 detik untuk semua service)..."
-            sleep 30 # Beri waktu yang cukup agar Nginx, PHP-FPM, dan MySQL sepenuhnya terinisialisasi
+            # Jalankan container aplikasi "all-in-one"
+            echo "Running new all-in-one application container named 'guestbook-app'..."
+            docker run -d \
+              --name guestbook-app \
+              -p 80:80 \ # Port 80 di EC2 ke port 80 (Nginx) di container
+              -e APP_NAME=Guestbook \
+              -e APP_ENV=production \
+              -e APP_DEBUG=false \
+              -e APP_URL=http://${{ secrets.SSH_HOST }} \
+              -e APP_KEY=${{ secrets.APP_KEY }} \
+              -e DB_CONNECTION=mysql \
+              -e DB_HOST=guestbook-db \
+              -e DB_PORT=3306 \
+              -e DB_DATABASE=${{ secrets.DB_DATABASE }} \
+              -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
+              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              your-dockerhub-username/guestbook-laravel:latest
 
-            # 5. Jalankan migrasi database di container aplikasi
-            echo "Menjalankan migrasi database di container aplikasi..."
-            docker compose exec app php artisan migrate --force
+            echo "Waiting for containers to fully start up (30 seconds)..."
+            sleep 30
+
+            echo "Running database migrations..."
+            docker exec guestbook-app php artisan migrate --force
 
             echo "--- Deployment Selesai! ---"

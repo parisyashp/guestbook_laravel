@@ -4,12 +4,18 @@ version: '3.8'
 services:
   # Laravel Application Service (PHP-FPM)
   app:
-    image: parisyashp31/guestbook-laravel:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80" # Map port 8080 di lokal ke port 80 (Nginx) di container app
+    volumes:
+      - .:/var/www/html 
     environment:
       APP_NAME: Guestbook
-      APP_ENV: production
-      APP_DEBUG: "false"
-      APP_URL: http://${{ secrets.SSH_HOST }} # *** UPDATED: Matches Nginx host port ***
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8080
       DB_CONNECTION: mysql
       DB_HOST: db
       DB_PORT: 3306 # This is the internal container port for MySQL, not your host port
@@ -19,24 +25,14 @@ services:
     depends_on:
       - db
 
-  # Nginx Web Server Service
-  nginx:
-    image: nginx:stable-alpine
-    ports:
-      - "80:80" # *** UPDATED: Host port 8080 -> Container port 80 ***
-                 # You will access your app at http://localhost:8080
-    volumes:
-      - .:/var/www/html
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - app
-
   # Database Service (MySQL)
   db:
     image: mysql:8.0
+    ports:
+      - "3307:3306"
     # Host port 3307 -> Container port 3306
     environment:
-      DB_DATABASE: guestbook_db # <--- CHANGED HERE
+      MYSQL_DATABASE: guestbook_db # <--- CHANGED HERE
       MYSQL_ROOT_PASSWORD: root_password
       MYSQL_USER: user
       MYSQL_PASSWORD: password

@@ -32,7 +32,8 @@ RUN apk add --no-cache \
     unzip \
     mysql-client \
     libpng-dev \
-    libjpeg-turbo-dev 
+    libjpeg-turbo-dev \
+    nginx 
     #nodejs \
     #npm
 
@@ -54,52 +55,27 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # This ensures 'artisan' and other project files are present
 COPY . .
 
-# COPY composer.json composer.lock ./
-# RUN composer install --no-dev --optimize-autoloader --no-interaction
-# We copy only composer.json and composer.lock first, then run `composer install`.
-# This optimizes Docker caching: if only your application code changes (but not
-# composer.json/lock), Docker can use the cached layer for `composer install`,
-# making subsequent builds faster.
-# - `--no-dev`: Skips installing development dependencies (phpunit, mockery, etc.)
-#               which are not needed in production images, saving space.
-# - `--optimize-autoloader`: Optimizes Composer's autoloader for faster class loading.
-# - `--no-interaction`: Prevents Composer from asking for user input.
-#COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Copy Nginx configuration into the container
+# Ini adalah konfigurasi Nginx yang akan digunakan oleh Nginx di dalam container ini.
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 
-# COPY . .
-# Copies all remaining files from your local project directory (the build context)
-# into the container's working directory (`/var/www/html`).
-#COPY . .
+# Setel izin yang benar untuk folder storage dan cache Laravel
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \
+    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# COPY .env.example .env
-# RUN php artisan key:generate
-# These steps set up a basic .env file and generate an app key inside the image.
-# For *production deployment*, you'll typically pass actual environment variables
-# during `docker run` or `docker-compose up` using `-e` flags, which will
-# override these values. But for a self-contained image that can run for basic testing,
-# this is useful.
-#COPY .env.example .env
-#RUN php artisan key:generate
+# Hapus konfigurasi Nginx default jika ada
+RUN rm /etc/nginx/conf.d/default.conf || true 
 
-# RUN npm install
-# RUN npm run build
-# These commands install Node.js dependencies (from `package.json`) and then build
-# your frontend assets (CSS, JavaScript) using tools like Webpack or Vite.
-# If the `guestbook_laravel` app doesn't have a `package.json` or uses compiled assets,
-# you can comment out or remove these lines. Check your project structure!
-# If you later add a frontend framework (Vue/React) or tailwindcss/bootstrap via npm,
-# you'll need these.
-#RUN npm install
-#RUN npm run build
-
-# EXPOSE 9000
-# Informs Docker that the container will listen on port 9000 at runtime.
-# This is the default port for PHP-FPM. It doesn't actually publish the port
-# but serves as documentation.
+# Expose port 80 untuk Nginx (Web Server)
+EXPOSE 80
+# Expose port 9000 untuk PHP-FPM (opsional, untuk debugging langsung ke FPM)
 EXPOSE 9000
 
-# CMD ["php-fpm"]
-# The default command that will be executed when a container starts from this image.
-# This starts the PHP-FPM service, which will be ready to receive requests from Nginx.
-CMD ["php-fpm"]
+# Buat script entrypoint kustom untuk menjalankan PHP-FPM dan Nginx secara bersamaan
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh 
+RUN chmod +x /usr/local/bin/entrypoint.sh 
+
+# Gunakan script entrypoint kustom
+ENTRYPOINT ["entrypoint.sh"]
+# CMD tidak diperlukan di sini karena entrypoint.sh akan menjalankan keduanya.
+# CMD ["php-fpm"] # Ini akan digantikan oleh entrypoint.sh
