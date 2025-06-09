@@ -99,4 +99,7 @@ jobs:
             echo "Running database migrations..."
             docker exec guestbook-app php artisan migrate --force
 
+            echo "Running database seeders..."
+            docker compose exec app php artisan db:seed
+
             echo "--- Deployment Selesai! ---"
