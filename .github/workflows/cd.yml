@@ -19,7 +19,7 @@ jobs:
       # LANGKAH BARU: Menyalin Semua File Repository ke Server menggunakan rsync-action
       # Ini menggantikan appleboy/scp-action dan lebih robust.
       - name: Copy All Files to Server (rsync)
-        uses: burnett01/rsync-action@1.2.1 # Action rsync untuk menyinkronkan file melalui SSH
+        uses: burnett01/rsync-action@v1 # Action rsync untuk menyinkronkan file melalui SSH
         with:
           # Direktori sumber relatif terhadap root repository di runner. './' berarti salin semua.
           src: './'
