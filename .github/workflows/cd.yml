@@ -40,6 +40,10 @@ jobs:
             docker stop guestbook-db || true
             docker rm guestbook-db || true
 
+            #membuat jaringan custom
+            echo "Creating custom Docker network 'guestbook-network'..."
+            docker network create guestbook-network || true
+
             # Jalankan container database
             echo "Running new database container named 'guestbook-db'..."
             docker run -d \
@@ -55,6 +59,7 @@ jobs:
             echo "Running new all-in-one application container named 'guestbook-app'..."
             docker run -d \
               --name guestbook-app \
+              --network guestbook-network \
               -p 80:80 \
               -e APP_NAME=Guestbook \
               -e APP_ENV=production \
