@@ -55,6 +55,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # This ensures 'artisan' and other project files are present
 COPY . .
 
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
 # --- KONFIGURASI NGINX BARU DAN BERSIH DI DOCKERFILE ---
 # Hapus semua konfigurasi Nginx default
 RUN rm -rf /etc/nginx/conf.d/* /etc/nginx/nginx.conf && \
