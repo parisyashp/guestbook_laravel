@@ -74,8 +74,27 @@ jobs:
               -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
               parisyashp31/guestbook-laravel:latest
 
-            echo "Waiting for containers to fully start up (30 seconds)..."
-            sleep 30
+            # --- PENTING: Penunggu Database yang Lebih Robust ---
+            echo "Menunggu database siap menerima koneksi..."
+            ATTEMPTS=0
+            MAX_ATTEMPTS=60 # Mencoba hingga 60 kali (total 60 detik)
+            while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+                docker exec guestbook-db mysqladmin ping -h guestbook-db -u ${{ secrets.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} --silent
+                if [ $? -eq 0 ]; then
+                    echo "Database sudah siap!"
+                    break
+                fi
+                echo "Database belum siap, mencoba lagi dalam 1 detik... (Percobaan ke $((ATTEMPTS+1)))"
+                sleep 1
+                ATTEMPTS=$((ATTEMPTS+1))
+            done
+
+            # Jika keluar dari loop tanpa DB siap, berarti gagal
+            if [ $ATTEMPTS -eq $MAX_ATTEMPTS ]; then
+                echo "Error: Database tidak siap tepat waktu setelah $MAX_ATTEMPTS percobaan."
+                exit 1
+            fi
+            # --- AKHIR PENUNGGU DATABASE ---
 
             echo "Running database migrations..."
             docker exec guestbook-app php artisan migrate --force
