@@ -22,9 +22,13 @@ jobs:
           script: |
             echo "--- Memulai Deployment di Server ---"
 
+            echo "Logging into Docker Hub on EC2 instance..."
+            echo "${{ secrets.DOCKER_TOKEN }}" | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
+            echo "Docker Hub login successful on EC2."
+
             # Pull image aplikasi "all-in-one" (sudah ada Nginx dan PHP-FPM)
-            echo "Pulling latest all-in-one application Docker image: your-dockerhub-username/guestbook-laravel:latest"
-            docker pull your-dockerhub-username/guestbook-laravel:latest
+            echo "Pulling latest all-in-one application Docker image: parisyashp31/guestbook-laravel:latest"
+            docker pull parisyashp31/guestbook-laravel:latest
 
             # Pull image MySQL
             echo "Pulling MySQL Docker image: mysql:8.0"
@@ -51,7 +55,7 @@ jobs:
             echo "Running new all-in-one application container named 'guestbook-app'..."
             docker run -d \
               --name guestbook-app \
-              -p 80:80 \ # Port 80 di EC2 ke port 80 (Nginx) di container
+              -p 80:80 \
               -e APP_NAME=Guestbook \
               -e APP_ENV=production \
               -e APP_DEBUG=false \
@@ -63,7 +67,7 @@ jobs:
               -e DB_DATABASE=${{ secrets.DB_DATABASE }} \
               -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
               -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              your-dockerhub-username/guestbook-laravel:latest
+              parisyashp31/guestbook-laravel:latest
 
             echo "Waiting for containers to fully start up (30 seconds)..."
             sleep 30
