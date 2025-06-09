@@ -55,9 +55,18 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # This ensures 'artisan' and other project files are present
 COPY . .
 
-# Copy Nginx configuration into the container
-# Ini adalah konfigurasi Nginx yang akan digunakan oleh Nginx di dalam container ini.
+# --- KONFIGURASI NGINX BARU DAN BERSIH DI DOCKERFILE ---
+# Hapus semua konfigurasi Nginx default
+RUN rm -rf /etc/nginx/conf.d/* /etc/nginx/nginx.conf && \
+    mkdir -p /etc/nginx/conf.d/
+
+# Buat file konfigurasi Nginx utama yang minimalis dan benar
+# File ini akan kita buat di Langkah 2
+COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf 
+
+# Salin konfigurasi default.conf kustom Anda ke dalam folder conf.d
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+# --- AKHIR KONFIGURASI NGINX BARU ---
 
 # Setel izin yang benar untuk folder storage dan cache Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \
