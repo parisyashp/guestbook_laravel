@@ -1,70 +1,86 @@
 # .github/workflows/cd.yml
 name: Laravel CD Pipeline (Manual Deploy)
 
-# This workflow can be triggered manually from the GitHub Actions UI.
+# Workflow ini dapat dipicu secara manual dari UI GitHub Actions.
 on:
   workflow_dispatch:
-    # No inputs defined for this simple setup, but you could add them (e.g., to select a specific tag to deploy).
+    # Tidak ada input yang didefinisikan untuk setup sederhana ini.
 
 jobs:
-  # The Deploy Job
   deploy:
-    runs-on: ubuntu-latest # GitHub-hosted runner for executing SSH commands
-    environment: production # Designates this as a production deployment (useful for GitHub's UI)
+    runs-on: ubuntu-latest # Runner yang di-host GitHub untuk mengeksekusi perintah SSH
+    environment: production # Menetapkan ini sebagai deployment produksi (berguna untuk UI GitHub)
 
     steps:
-      # CRUCIAL STEP: Checkout code into this job's workspace
+      # Langkah KRUSIAL: Checkout kode ke workspace job ini
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # STEP: Copy Docker Compose files to Server
-      # This step copies docker-compose.yml and your Nginx config to your EC2 instance.
-      - name: Copy Docker Compose files to Server
-        uses: appleboy/scp-action@v1.0.0 # Action to copy files over SSH
+      # LANGKAH BARU: Menyalin Semua File Repository ke Server menggunakan rsync-action
+      # Ini menggantikan appleboy/scp-action dan lebih robust.
+      - name: Copy All Files to Server (rsync)
+        uses: burnett01/rsync-action@1.2.1 # Action rsync untuk menyinkronkan file melalui SSH
+        with:
+          # Direktori sumber relatif terhadap root repository di runner. './' berarti salin semua.
+          src: './'
+          # Direktori tujuan di server remote. rsync akan membuatnya jika belum ada.
+          dest: '/home/${{ secrets.SSH_USERNAME }}/guestbook_app/'
+          # Host SSH, username, dan kunci diambil dari GitHub Secrets Anda.
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # Mengecualikan file/direktori yang TIDAK boleh disalin ke server
+          exclude: |
+            .git/            
+            .github/         
+            node_modules/    
+            vendor/          
+            .env             
+            .env.example     
+            *.log            
+            *.cache          
+            *.pem            
+          # Opsi rsync:
+          # -a: archive mode (mempertahankan izin, timestamp, dll.)
+          # -v: verbose output (menampilkan detail)
+          # -z: compress file data selama transfer
+          # --delete-after: menghapus file di tujuan yang tidak ada di sumber setelah transfer (sinkronisasi)
+          options: -avz --delete-after
+
+      # Langkah Deployment Utama: Sekarang file-file sudah ada di instance EC2!
+      - name: Deploy Application with Docker Compose
+        uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: |
-            docker-compose.yml
-            docker/nginx/default.conf
-          target: "/home/${{ secrets.SSH_USERNAME }}/guestbook_app" # Destination directory on EC2 instance
-
-      - name: Deploy Application with Docker Compose
-        uses: appleboy/ssh-action@v1.0.0 # A popular GitHub Action for running commands over SSH
-        with:
-          host: ${{ secrets.SSH_HOST }}             # Uses the GitHub Secret for your server's IP address
-          username: ${{ secrets.SSH_USERNAME }}     # Uses the GitHub Secret for your SSH username on the server
-          key: ${{ secrets.SSH_PRIVATE_KEY }}       # Uses the GitHub Secret for your SSH private key
-
-          # The 'script' section contains the commands to be executed on your remote server
           script: |
-            echo "--- Starting Deployment on Server with Docker Compose ---"
+            echo "--- Memulai Deployment di Server dengan Docker Compose ---"
 
-            mkdir -p /home/${{ secrets.SSH_USERNAME }}/guestbook_app
-            
+            # Navigasi ke direktori aplikasi di EC2 tempat file disalin oleh rsync-action
+            # mkdir -p tidak diperlukan di sini karena rsync-action membuat direktori tujuan secara otomatis.
             cd /home/${{ secrets.SSH_USERNAME }}/guestbook_app
 
-            echo "Pulling Docker Compose service images..."
+            # 1. Pull semua image service yang didefinisikan dalam docker-compose.yml
+            # Ini memastikan kita mendapatkan image terbaru untuk aplikasi, nginx, dan mysql dari Docker Hub.
+            echo "Pulling image service Docker Compose..."
             docker compose pull
 
-            
-            echo "Stopping and removing existing Docker Compose services (if running)..."
-            
-            docker compose down -v || true
+            # 2. Hentikan dan hapus service yang sudah ada
+            echo "Menghentikan dan menghapus service Docker Compose yang ada (jika sedang berjalan)..."
+            # -v memastikan volume (seperti data DB) dihapus untuk awal yang bersih di setiap deployment.
+            docker compose down -v || true # '|| true' mengabaikan error jika service tidak berjalan
 
-            
-            echo "Bringing up new Docker Compose services..."
-            
+            # 3. Jalankan semua service baru dalam mode detached
+            echo "Menjalankan service Docker Compose baru..."
             docker compose up -d
 
-            
-            echo "Waiting for containers to fully start up (30 seconds for all services)..."
-            sleep 30
+            # 4. Tunggu container untuk sepenuhnya aktif
+            echo "Menunggu container aktif sepenuhnya (30 detik untuk semua service)..."
+            sleep 30 # Beri waktu yang cukup agar Nginx, PHP-FPM, dan MySQL sepenuhnya terinisialisasi
 
-            
-            echo "Running database migrations on the application container..."
-            
+            # 5. Jalankan migrasi database di container aplikasi
+            echo "Menjalankan migrasi database di container aplikasi..."
             docker compose exec app php artisan migrate --force
 
-            echo "--- Deployment Complete! ---"
+            echo "--- Deployment Selesai! ---"
