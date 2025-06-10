@@ -31,8 +31,8 @@ jobs:
             docker pull parisyashp31/guestbook-laravel:latest
 
             # Pull image MySQL
-            echo "Pulling MySQL Docker image: mysql:8.0"
-            docker pull mysql:8.0
+            echo "Pulling MySQL Docker image: mysql:5.7"
+            docker pull mysql:5.7
 
             echo "Stopping and removing existing containers (if running)..."
             docker stop guestbook-app || true
@@ -53,7 +53,7 @@ jobs:
               -e MYSQL_ROOT_PASSWORD=root_password \
               -e MYSQL_USER=${{ secrets.DB_USERNAME }} \
               -e MYSQL_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              mysql:8.0
+              mysql:5.7
 
             # Jalankan container aplikasi "all-in-one"
             echo "Running new all-in-one application container named 'guestbook-app'..."
