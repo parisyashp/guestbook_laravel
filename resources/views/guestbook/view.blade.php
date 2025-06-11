@@ -238,7 +238,10 @@
             Kembali
         </a>
         <h2>Daftar Tamu</h2>
-        <a href="{{ route('guestbook.reset') }}" class="btn btn-danger">Reset Tabel</a>
+        <form action="{{ route('guestbook.reset') }}" method="POST" style="display:inline-block; margin:0;">
+            @csrf
+            <button type="submit" class="btn btn-danger">Reset Tabel</button>
+        </form>
     </div>
 
     {{-- Main content container --}}
@@ -265,8 +268,12 @@
                                 <td class="action-buttons">
                                     {{-- Placeholder for Edit and Delete actions --}}
                                     {{-- Implement actual edit/delete logic requiring database interaction --}}
-                                    <a href="#" class="btn btn-info">Edit</a>
-                                    <a href="#" class="btn btn-danger">Hapus</a>
+                                    <a href="{{ route('guestbook.edit', ['index' => $index]) }}" class="btn btn-info">Edit</a>
+                                    <form action="{{ route('guestbook.destroy', ['index' => $index]) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus entri ini?');" style="display:inline-block; margin:0;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger">Hapus</button>
+                                    </form>
                                 </td>
                             </tr>
                         @endforeach

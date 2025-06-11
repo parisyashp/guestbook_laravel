@@ -1,5 +1,5 @@
 # .github/workflows/cd.yml
-name: Laravel CD Pipeline (Manual Deploy)
+name: Laravel CD Pipeline
 
 on:
   workflow_run:
