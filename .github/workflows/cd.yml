@@ -74,29 +74,9 @@ jobs:
               -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
               parisyashp31/guestbook-laravel:latest
             
-            echo "Menunggu database siap menerima koneksi (port 3306)..."
-            ATTEMPTS=0
-            MAX_ATTEMPTS=300
-            while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-                # Cek apakah port 3306 terbuka di container guestbook-db dari container guestbook-app
-                # nc -z: zero-I/O mode (hanya scan untuk melihat apakah ada yang mendengarkan)
-                # -w 1: timeout 1 detik
-                docker exec guestbook-app nc -z -w 1 guestbook-db 3306
-                if [ $? -eq 0 ]; then
-                    echo "Database port 3306 sudah terbuka!"
-                    break
-                fi
-                echo "Database port belum terbuka, mencoba lagi dalam 1 detik... (Percobaan ke $((ATTEMPTS+1)))"
-                sleep 1
-                ATTEMPTS=$((ATTEMPTS+1))
-            done
-
-            if [ $ATTEMPTS -eq $MAX_ATTEMPTS ]; then
-                echo "Error: Database port tidak siap tepat waktu setelah $MAX_ATTEMPTS percobaan."
-                exit 1
-            fi
-            # --- AKHIR PENUNGGU DATABASE ---
-
+            echo "Waiting for containers to fully start up (30 seconds)..."
+            sleep 30
+            
             echo "Running database migrations..."
             docker exec guestbook-app php artisan migrate --force
 

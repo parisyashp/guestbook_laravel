@@ -19,7 +19,7 @@ services:
       DB_CONNECTION: mysql
       DB_HOST: db
       DB_PORT: 3306 # This is the internal container port for MySQL, not your host port
-      DB_DATABASE: guestbook_db # <--- CHANGED HERE
+      DB_DATABASE: guestbook_db
       DB_USERNAME: user
       DB_PASSWORD: password
     depends_on:
@@ -32,7 +32,7 @@ services:
       - "3307:3306"
     # Host port 3307 -> Container port 3306
     environment:
-      MYSQL_DATABASE: guestbook_db # <--- CHANGED HERE
+      MYSQL_DATABASE: guestbook_db
       MYSQL_ROOT_PASSWORD: root_password
       MYSQL_USER: user
       MYSQL_PASSWORD: password

@@ -34,8 +34,7 @@ RUN apk add --no-cache \
     libpng-dev \
     libjpeg-turbo-dev \
     nginx 
-    #nodejs \
-    #npm
+
 
 # RUN docker-php-ext-install pdo_mysql gd
 # This command compiles and installs specific PHP extensions.
@@ -51,24 +50,17 @@ RUN docker-php-ext-install pdo_mysql gd
 # into our current image. This ensures we have the latest Composer.
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# *** CRITICAL CHANGE HERE: COPY ALL APPLICATION CODE BEFORE COMPOSER INSTALL ***
 # This ensures 'artisan' and other project files are present
 COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# --- KONFIGURASI NGINX BARU DAN BERSIH DI DOCKERFILE ---
-# Hapus semua konfigurasi Nginx default
 RUN rm -rf /etc/nginx/conf.d/* /etc/nginx/nginx.conf && \
     mkdir -p /etc/nginx/conf.d/
 
-# Buat file konfigurasi Nginx utama yang minimalis dan benar
-# File ini akan kita buat di Langkah 2
 COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf 
 
-# Salin konfigurasi default.conf kustom Anda ke dalam folder conf.d
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
-# --- AKHIR KONFIGURASI NGINX BARU ---
 
 # Setel izin yang benar untuk folder storage dan cache Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \
