@@ -4,174 +4,161 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Faker\Factory; // Pastikan ini diimpor jika Anda masih menggunakan Faker di tempat lain
+// use Faker\Factory; // Tidak lagi dibutuhkan jika tidak membuat data palsu lagi
+use App\Models\Guestbook; // Pastikan model Guestbook diimpor
 
 class GuestbookController extends Controller
 {
     /**
      * Menampilkan formulir buku tamu.
+     * Tidak ada perubahan signifikan di sini, hanya memastikan view yang benar.
      */
     public function showForm()
     {
-        return view('guestbook.form'); //
+        // Pastikan view 'guestbook.form' ada
+        return view('guestbook.form');
     }
 
     /**
-     * Memproses pengiriman formulir buku tamu dan menyimpan data ke sesi.
+     * Memproses pengiriman formulir buku tamu dan menyimpan data ke database.
      */
     public function submitForm(Request $request)
     {
+        // Validasi data input
         $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'email' => 'required|email',
-            'message' => 'required',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'message' => 'required|string',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $guestbookData = [ //
+        // --- Perubahan di sini: Menyimpan data ke database ---
+        // Gunakan model Guestbook untuk membuat record baru
+        Guestbook::create([
             'name' => $request->input('name'),
             'email' => $request->input('email'),
-            'message' => $request->input('message'), //
-        ];
+            'message' => $request->input('message'),
+        ]);
 
-        // Ambil data buku tamu dari sesi
-        $guestbook = session('guestbook', []); //
-
-        // Hitung indeks untuk entri baru sebelum menambahkannya
-        $lastSubmittedEntryIndex = count($guestbook); //
-
-        // Tambahkan entri baru ke array buku tamu
-        $guestbook[] = $guestbookData; //
-
-        // Simpan kembali array buku tamu yang sudah diperbarui ke sesi
-        session(['guestbook' => $guestbook]); //
-
-        // Simpan data entri terakhir dan index-nya ke sesi flash
-        session()->flash('lastSubmittedGuestbookData', $guestbookData); //
-        session()->flash('lastSubmittedEntryIndex', $lastSubmittedEntryIndex); //
-
-        return redirect()->route('guestbook.result'); //
+        // Redirect ke halaman tampilan buku tamu setelah berhasil menyimpan
+        return redirect()->route('guestbook.view')->with('success', 'Pesan Anda telah berhasil disimpan!');
     }
 
     /**
-     * Menampilkan semua entri buku tamu dari sesi.
-     * Tidak lagi menghasilkan data palsu secara otomatis di sini.
+     * Menampilkan semua entri buku tamu dari database.
      */
-    public function viewGuestbook() //
+    public function viewGuestbook()
     {
-        // Ambil data buku tamu dari sesi.
-        // Jika sesi 'guestbook' kosong, maka akan kembali array kosong.
-        $guestbook = session('guestbook', []); //
+        // --- Perubahan di sini: Mengambil data dari database ---
+        // Ambil semua entri buku tamu dari database menggunakan model Guestbook
+        // Hasilnya adalah koleksi Eloquent, bukan array sesi.
+        $mergedGuestbookData = Guestbook::all();
 
-        // Jika Anda masih ingin data palsu sebagai 'dummy' saat pertama kali kosong,
-        // Anda bisa tambahkan logika di sini untuk HANYA menghasilkan data palsu
-        // jika sesi benar-benar kosong dan belum pernah ada data yang dimasukkan.
-        // Contoh:
-        // if (empty($guestbook) && !session()->has('has_initial_fake_data')) { //
-        //     $faker = Factory::create(); //
-        //     for ($i = 0; $i < 10; $i++) { //
-        //         $guestbook[] = [ //
-        //             'name' => $faker->name(), //
-        //             'email' => $faker->email(), //
-        //             'message' => ucwords($faker->catchPhrase . ' ' . $faker->bs), //
-        //         ];
-        //     }
-        //     session(['guestbook' => $guestbook]); // Simpan data palsu ini ke sesi //
-        //     session()->put('has_initial_fake_data', true); // Penanda bahwa data palsu awal sudah dibuat //
-        // }
-
-        // Sekarang $guestbook berisi data asli pengguna. //
-        // Jika Anda ingin data palsu muncul lagi setelah reset,
-        // logika di atas bisa dipertimbangkan, atau Anda bisa menampilkan pesan 'kosong'.
-        return view('guestbook.view', ['mergedGuestbookData' => $guestbook]); //
+        // Kirim data ke view 'guestbook.view'
+        return view('guestbook.view', compact('mergedGuestbookData'));
     }
 
     /**
      * Menampilkan hasil entri buku tamu yang baru saja disubmit.
+     * Karena sekarang kita menyimpan ke database, logika 'lastSubmittedEntryIndex'
+     * dan 'lastSubmittedGuestbookData' dari sesi menjadi tidak relevan untuk
+     * melihat data yang baru disimpan. Halaman 'viewGuestbook' sudah akan menampilkan
+     * data terbaru. Jika Anda masih ingin halaman 'result' yang terpisah,
+     * mungkin tampilannya perlu diadaptasi (misalnya menampilkan entri terbaru dari DB).
+     * Untuk kesederhanaan, kita akan mengarahkan ke viewGuestbook karena dia menampilkan semua data.
      */
     public function viewGuestbookResult()
     {
-        $guestbookData = session('lastSubmittedGuestbookData'); //
-        $lastSubmittedEntryIndex = session('lastSubmittedEntryIndex'); //
-
-        if (is_null($guestbookData) || is_null($lastSubmittedEntryIndex)) {
-            return redirect()->route('home')->with('error', 'Data entri tidak ditemukan. Silakan isi formulir kembali.'); //
-        }
-
-        return view('guestbook.result', compact('guestbookData', 'lastSubmittedEntryIndex')); //
+        // Kita bisa langsung mengarahkan ke viewGuestbook karena dia akan fetch data terbaru.
+        // Atau, jika ingin menampilkan hanya yang terakhir, Anda bisa fetch dari DB.
+        // Contoh fetch terakhir: $lastEntry = Guestbook::latest()->first();
+        // Namun, rute 'guestbook.result' dan view-nya mungkin akan digabung dengan 'guestbook.view'
+        // atau dihapus jika tidak ada kebutuhan khusus.
+        // Untuk sekarang, kita arahkan saja ke viewGuestbook
+        return redirect()->route('guestbook.view');
     }
 
     /**
-     * Menampilkan formulir edit untuk entri buku tamu tertentu berdasarkan index.
-     * @param int $index Index dari entri di array sesi. //
+     * Menampilkan formulir edit untuk entri buku tamu tertentu berdasarkan ID dari database.
+     *
+     * @param int $id ID dari entri di database.
      */
-    public function edit($index)
+    public function edit($id)
     {
-        $guestbook = session('guestbook', []); //
-        if (isset($guestbook[$index])) {
-            $entry = $guestbook[$index]; //
-            return view('guestbook.edit', compact('entry', 'index')); //
-        }
-        return redirect()->back()->with('error', 'Entri tidak ditemukan.'); //
+        // --- Perubahan di sini: Mencari entri berdasarkan ID database ---
+        // Temukan entri berdasarkan ID, atau tampilkan 404 jika tidak ditemukan
+        $guestbookEntry = Guestbook::findOrFail($id);
+
+        // Kirim objek model $guestbookEntry ke view edit
+        // View 'edit.blade.php' Anda harus menerima 'guestbookEntry' dan bukan 'entry' dan 'index'
+        return view('guestbook.edit', compact('guestbookEntry'));
     }
 
     /**
-     * Memperbarui entri buku tamu tertentu di sesi.
-     * @param Request $request Data yang dikirim dari formulir. //
-     * @param int $index Index dari entri di array sesi. //
+     * Memperbarui entri buku tamu tertentu di database.
+     *
+     * @param \Illuminate\Http\Request $request Data yang dikirim dari formulir.
+     * @param int $id ID dari entri di database.
      */
-    public function update(Request $request, $index) //
+    public function update(Request $request, $id)
     {
+        // Validasi data input
         $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'email' => 'required|email',
-            'message' => 'required',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'message' => 'required|string',
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput(); //
+            return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $guestbook = session('guestbook', []); //
-        if (isset($guestbook[$index])) {
-            $guestbook[$index] = [ //
-                'name' => $request->input('name'),
-                'email' => $request->input('email'),
-                'message' => $request->input('message'),
-            ];
-            session(['guestbook' => $guestbook]); //
-            return redirect()->route('guestbook.view')->with('success', 'Entri berhasil diperbarui!'); //
-        }
-        return redirect()->back()->with('error', 'Entri tidak ditemukan.'); //
+        // --- Perubahan di sini: Memperbarui data di database ---
+        // Temukan entri berdasarkan ID, atau tampilkan 404 jika tidak ditemukan
+        $guestbookEntry = Guestbook::findOrFail($id);
+
+        // Perbarui atribut-atribut entri dengan data baru
+        $guestbookEntry->update([
+            'name' => $request->input('name'),
+            'email' => $request->input('email'),
+            'message' => $request->input('message'),
+        ]);
+
+        // Redirect kembali ke tampilan buku tamu dengan pesan sukses
+        return redirect()->route('guestbook.view')->with('success', 'Entri berhasil diperbarui!');
     }
 
     /**
-     * Menghapus entri buku tamu tertentu dari sesi.
-     * @param int $index Index dari entri di array sesi. //
+     * Menghapus entri buku tamu tertentu dari database.
+     *
+     * @param int $id ID dari entri di database.
      */
-    public function destroy($index) //
+    public function destroy($id)
     {
-        $guestbook = session('guestbook', []); //
-        if (isset($guestbook[$index])) {
-            array_splice($guestbook, $index, 1); //
-            session(['guestbook' => $guestbook]); //
-            return redirect()->route('guestbook.view')->with('success', 'Entri berhasil dihapus.'); //
-        }
-        return redirect()->back()->with('error', 'Entri tidak ditemukan.'); //
+        // --- Perubahan di sini: Menghapus data dari database ---
+        // Temukan entri berdasarkan ID, atau tampilkan 404 jika tidak ditemukan
+        $guestbookEntry = Guestbook::findOrFail($id);
+
+        // Hapus entri dari database
+        $guestbookEntry->delete();
+
+        // Redirect kembali ke tampilan buku tamu dengan pesan sukses
+        return redirect()->route('guestbook.view')->with('success', 'Entri berhasil dihapus.');
     }
 
     /**
-     * Menghapus semua entri buku tamu dari sesi (reset tabel).
+     * Mereset (menghapus semua) data buku tamu dari database.
      */
-    public function resetGuestbook() //
+    public function resetGuestbook()
     {
-        session()->forget('guestbook'); // Hapus semua data 'guestbook' dari sesi //
-        // Jika Anda menggunakan penanda 'has_initial_fake_data' di viewGuestbook(), //
-        // Anda juga harus menghapusnya di sini agar data palsu bisa dibuat lagi. //
-        // session()->forget('has_initial_fake_data'); //
-        return redirect()->route('guestbook.view')->with('success', 'Tabel buku tamu berhasil di-reset.'); //
+        // --- Perubahan di sini: Menghapus semua data dari tabel database ---
+        // Hapus semua data dari tabel 'guestbooks'
+        Guestbook::truncate(); // Ini akan menghapus semua record dan mereset ID auto-increment
+
+        // Redirect kembali ke tampilan buku tamu dengan pesan sukses
+        return redirect()->route('guestbook.view')->with('success', 'Tabel buku tamu berhasil direset!');
     }
 }

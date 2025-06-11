@@ -29,11 +29,14 @@ Route::get('/guestbook-view', [GuestbookController::class, 'viewGuestbook'])->na
 Route::post('/guestbook', [GuestbookController::class, 'submitForm'])->name('guestbook.submit'); //
 Route::get('/guestbook-result', [GuestbookController::class, 'viewGuestbookResult'])->name('guestbook.result'); //
 
-Route::get('/guestbook/{index}/edit', [GuestbookController::class, 'edit'])->name('guestbook.edit'); //
+// *** PERUBAHAN DI SINI: {index} diubah menjadi {id} ***
+Route::get('/guestbook/{id}/edit', [GuestbookController::class, 'edit'])->name('guestbook.edit'); //
 // UBAH DARI POST MENJADI PUT UNTUK OPERASI UPDATE YANG BENAR
-Route::put('/guestbook/{index}', [GuestbookController::class, 'update'])->name('guestbook.update'); // Menggunakan PUT untuk update, lebih sesuai RESTful
+// *** PERUBAHAN DI SINI: {index} diubah menjadi {id} ***
+Route::put('/guestbook/{id}', [GuestbookController::class, 'update'])->name('guestbook.update'); // Menggunakan PUT untuk update, lebih sesuai RESTful
 
-Route::delete('/guestbook/{index}', [GuestbookController::class, 'destroy'])->name('guestbook.destroy'); //
+// *** PERUBAHAN DI SINI: {index} diubah menjadi {id} ***
+Route::delete('/guestbook/{id}', [GuestbookController::class, 'destroy'])->name('guestbook.destroy'); //
 
 // Ini adalah satu-satunya rute untuk reset yang kita inginkan:
 Route::post('/guestbook/reset', [GuestbookController::class, 'resetGuestbook'])->name('guestbook.reset'); //
