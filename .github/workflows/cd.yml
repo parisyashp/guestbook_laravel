@@ -2,6 +2,9 @@
 name: Laravel CD Pipeline (Manual Deploy)
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -48,6 +51,7 @@ jobs:
             echo "Running new database container named 'guestbook-db'..."
             docker run -d \
               --name guestbook-db \
+              --network guestbook-network \
               -p 3306:3306 \
               -e MYSQL_DATABASE=${{ secrets.DB_DATABASE }} \
               -e MYSQL_ROOT_PASSWORD=root_password \
