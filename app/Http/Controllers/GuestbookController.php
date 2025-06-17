@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Models\Guestbook; // Menggunakan model Guestbook.php
+use App\Models\Guestbook; // Pastikan ini mengacu pada model Anda di app/Models/Guestbook.php
 
 class GuestbookController extends Controller
 {
@@ -31,8 +31,8 @@ class GuestbookController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // Simpan data ke DATABASE (menggunakan model Guestbook)
-        $guestbookEntry = Guestbook::create([
+        // Simpan data ke DATABASE
+        $guestbookEntry = Guestbook::create([ // Menggunakan model Guestbook untuk membuat entri
             'name' => $request->input('name'),
             'email' => $request->input('email'),
             'message' => $request->input('message'),
@@ -47,8 +47,9 @@ class GuestbookController extends Controller
             'email' => $guestbookEntry->email,
             'message' => $guestbookEntry->message,
         ]);
-        session()->flash('lastSubmittedEntryIndex', $lastSubmittedEntryId); // Sekarang ini adalah ID database
+        session()->flash('lastSubmittedEntryIndex', $lastSubmittedEntryId); // Ini adalah ID database
 
+        // Mengarahkan ke halaman hasil
         return redirect()->route('guestbook.result');
     }
 
@@ -57,10 +58,9 @@ class GuestbookController extends Controller
      */
     public function viewGuestbook()
     {
-        // Ambil semua entri dari tabel guestbooks di database (menggunakan model Guestbook)
-        $guestbookEntries = Guestbook::all();
+        // Ambil semua entri dari tabel guestbooks di database
+        $guestbookEntries = Guestbook::all(); // Menggunakan model Guestbook untuk mengambil semua data
 
-        // Gunakan nama variabel yang konsisten dengan view Anda
         return view('guestbook.view', ['mergedGuestbookData' => $guestbookEntries]);
     }
 
@@ -73,6 +73,7 @@ class GuestbookController extends Controller
         $lastSubmittedEntryIndex = session('lastSubmittedEntryIndex'); // Ini adalah ID dari database
 
         if (is_null($guestbookData) || is_null($lastSubmittedEntryIndex)) {
+            // Jika halaman di-refresh atau diakses langsung, data mungkin hilang.
             return redirect()->route('home')->with('error', 'Data entri tidak ditemukan. Silakan isi formulir kembali.');
         }
 
@@ -85,10 +86,8 @@ class GuestbookController extends Controller
      */
     public function edit($id)
     {
-        // Ambil data dari database berdasarkan ID (menggunakan model Guestbook)
-        $entry = Guestbook::findOrFail($id); // Mencari entri berdasarkan ID, atau 404 jika tidak ditemukan
-
-        return view('guestbook.edit', compact('entry', 'id')); // Lewatkan 'id' dan 'entry' (sebagai objek Eloquent)
+        $entry = Guestbook::findOrFail($id); // Menggunakan model Guestbook untuk mencari entri
+        return view('guestbook.edit', compact('entry', 'id'));
     }
 
     /**
@@ -108,8 +107,7 @@ class GuestbookController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // Update data di DATABASE (menggunakan model Guestbook)
-        $guestbookEntry = Guestbook::findOrFail($id);
+        $guestbookEntry = Guestbook::findOrFail($id); // Menggunakan model Guestbook
         $guestbookEntry->update([
             'name' => $request->input('name'),
             'email' => $request->input('email'),
@@ -125,8 +123,7 @@ class GuestbookController extends Controller
      */
     public function destroy($id)
     {
-        // Hapus data dari DATABASE (menggunakan model Guestbook)
-        $guestbookEntry = Guestbook::findOrFail($id);
+        $guestbookEntry = Guestbook::findOrFail($id); // Menggunakan model Guestbook
         $guestbookEntry->delete();
         return redirect()->route('guestbook.view')->with('success', 'Entri berhasil dihapus.');
     }
@@ -136,8 +133,7 @@ class GuestbookController extends Controller
      */
     public function resetGuestbook()
     {
-
-        Guestbook::truncate(); // Ini akan menghapus semua record dan me-reset auto-increment ID
-        return redirect()->route('guestbook.view')->with('success', 'Tabel buku tamu berhasil di-reset.');
+        Guestbook::truncate(); // Menggunakan model Guestbook untuk menghapus semua record
+        return redirect()->route('guestbook.view')->with('success', 'Tabel buku tamu berhasil direset!');
     }
 }

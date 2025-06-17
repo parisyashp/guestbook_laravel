@@ -190,7 +190,7 @@
             width: 25%;
         }
         .table th:nth-child(4), .table td:nth-child(4) { /* Pesan column */
-            width: 25%; /* Adjusted width for Pesan */
+            width: 25%;
         }
         .table th:nth-child(5) { /* Aksi column header */
             width: 20%; /* Adjusted width for Aksi to accommodate buttons */
@@ -356,14 +356,14 @@
         {{-- Pastikan Anda memiliki route 'guestbook.reset' dan method di controller Anda --}}
         <form action="{{ route('guestbook.reset') }}" method="POST" style="display:inline;">
             @csrf
-            {{--@method('POST')--}} {{-- Atau DELETE jika route reset menggunakan DELETE --}}
+            @method('POST') {{-- Atau DELETE jika route reset menggunakan DELETE --}}
             <button type="button" class="btn btn-danger" onclick="showResetConfirmation('{{ route('guestbook.reset') }}')">Reset Tabel</button>
         </form>
     </div>
 
     {{-- Main content container --}}
     <div class="container">
-        @if (isset($mergedGuestbookData) && $mergedGuestbookData->count() > 0)
+        @if (is_array($mergedGuestbookData) && count($mergedGuestbookData) > 0) {{-- Check if it's an array and not empty --}}
             <div class="table-responsive">
                 <table class="table">
                     <thead>
@@ -376,22 +376,22 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($mergedGuestbookData as $guestbookEntry)
+                        @foreach($mergedGuestbookData as $index => $guestbookEntry)
                             <tr>
-                                <td>{{ $loop->iteration }}</td> {{-- Gunakan $loop->iteration untuk nomor urut --}}
-                                <td>{{ $guestbookEntry->name ?? '-' }}</td> {{-- Akses sebagai objek ->name --}}
-                                <td>{{ $guestbookEntry->email ?? '-' }}</td> {{-- Akses sebagai objek ->email --}}
-                                <td>{{ $guestbookEntry->message ?? '-' }}</td> {{-- Akses sebagai objek ->message --}}
+                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $guestbookEntry['name'] ?? '-' }}</td>
+                                <td>{{ $guestbookEntry['email'] ?? '-' }}</td>
+                                <td>{{ $guestbookEntry['message'] ?? '-' }}</td>
                                 <td class="action-buttons">
-                                    <a href="{{ route('guestbook.edit', $guestbookEntry->id) }}" class="btn btn-info">Edit</a> {{-- Gunakan $guestbookEntry->id --}}
-                                    {{-- Menggunakan modal konfirmasi kustom untuk hapus --}}
-                                    {{-- <form action="{{ route('guestbook.destroy', $guestbookEntry->id) }}" method="POST" style="display:inline;"> {{-- Gunakan $guestbookEntry->id --}}
+                                    {{-- Tombol Edit --}}
+                                    <a href="{{ route('guestbook.edit', $index) }}" class="btn btn-info">Edit</a>
+
+                                    {{-- Tombol Hapus (menggunakan form DELETE) --}}
+                                    {{-- Menggunakan $index untuk identifikasi entri --}}
+                                    <form action="{{ route('guestbook.destroy', $index) }}" method="POST" style="display:inline;">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="button" class="btn btn-danger" onclick="showDeleteConfirmation('{{ route('guestbook.destroy', $guestbookEntry->id) }}')">Hapus</button> {{-- Gunakan $guestbookEntry->id --}}
-                                    </form> --}}
-                                    <form action="{{ route('guestbook.reset') }}" method="POST">
-                                        @csrf <button type="button" class="btn btn-danger">Reset Tabel</button>
+                                        <button type="button" class="btn btn-danger" onclick="showDeleteConfirmation('{{ route('guestbook.destroy', $index) }}')">Hapus</button>
                                     </form>
                                 </td>
                             </tr>
@@ -410,7 +410,9 @@
     <div id="confirmationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
         <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; max-width: 400px; width: 90%;">
             <p style="font-size: 1.1em; margin-bottom: 20px;">Apakah Anda yakin ingin menghapus data ini?</p>
+            {{-- Menambahkan class "btn" dan menghapus inline style --}}
             <button id="confirmDeleteBtn" class="btn btn-danger">Ya, Hapus</button>
+            {{-- Menambahkan class "btn" dan menghapus inline style --}}
             <button onclick="hideDeleteConfirmation()" class="btn btn-secondary">Batal</button>
         </div>
     </div>
@@ -419,76 +421,81 @@
     <div id="resetConfirmationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
         <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; max-width: 400px; width: 90%;">
             <p style="font-size: 1.1em; margin-bottom: 20px;">Apakah Anda yakin ingin me-reset seluruh tabel buku tamu?</p>
+            {{-- Menambahkan class "btn" dan menghapus inline style --}}
             <button id="confirmResetBtn" class="btn btn-danger">Ya, Reset</button>
+            {{-- Menambahkan class "btn" dan menghapus inline style --}}
             <button onclick="hideResetConfirmation()" class="btn btn-secondary">Batal</button>
         </div>
     </div>
 
 
     <script>
-        // DIKOREKSI: Bungkus kode JavaScript dalam IIFE (Immediately Invoked Function Expression)
-        // untuk mencegah kesalahan deklarasi ulang variabel
-        (function() {
-            let deleteFormAction = '';
-            let resetFormAction = '';
+        let deleteFormAction = ''; // Variable to store the form action for delete
+        let resetFormAction = ''; // Variable to store the form action for reset
 
-            window.showDeleteConfirmation = function(actionUrl) { // Jadikan global
-                deleteFormAction = actionUrl;
-                document.getElementById('confirmationModal').style.display = 'flex';
-            };
+        function showDeleteConfirmation(actionUrl) {
+            deleteFormAction = actionUrl;
+            document.getElementById('confirmationModal').style.display = 'flex';
+        }
 
-            window.hideDeleteConfirmation = function() { // Jadikan global
-                document.getElementById('confirmationModal').style.display = 'none';
-            };
+        function hideDeleteConfirmation() {
+            document.getElementById('confirmationModal').style.display = 'none';
+        }
 
-            window.showResetConfirmation = function(actionUrl) { // Jadikan global
-                resetFormAction = actionUrl;
-                document.getElementById('resetConfirmationModal').style.display = 'flex';
-            };
+        function showResetConfirmation(actionUrl) {
+            resetFormAction = actionUrl;
+            document.getElementById('resetConfirmationModal').style.display = 'flex';
+        }
 
-            window.hideResetConfirmation = function() { // Jadikan global
-                document.getElementById('resetConfirmationModal').style.display = 'none';
-            };
+        function hideResetConfirmation() {
+            document.getElementById('resetConfirmationModal').style.display = 'none';
+        }
 
-            // Event listener for "Ya, Hapus" button in delete modal
-            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = deleteFormAction;
-                form.style.display = 'none';
+        // Event listener for "Ya, Hapus" button in delete modal
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+            const form = document.createElement('form');
+            form.method = 'POST'; // Laravel's @method('DELETE') will handle this
+            form.action = deleteFormAction;
+            form.style.display = 'none';
 
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = '_token';
-                csrfInput.value = '{{ csrf_token() }}';
-                form.appendChild(csrfInput);
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = '{{ csrf_token() }}';
+            form.appendChild(csrfInput);
 
-                const methodInput = document.createElement('input');
-                methodInput.type = 'hidden';
-                methodInput.name = '_method';
-                methodInput.value = 'DELETE';
-                form.appendChild(methodInput);
+            const methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = '_method';
+            methodInput.value = 'DELETE'; // Ensure it's DELETE for Laravel
+            form.appendChild(methodInput);
 
-                document.body.appendChild(form);
-                form.submit();
-            });
+            document.body.appendChild(form);
+            form.submit();
+        });
 
-            // Event listener for "Ya, Reset" button in reset modal
-            document.getElementById('confirmResetBtn').addEventListener('click', function() {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = resetFormAction;
-                form.style.display = 'none';
+        // Event listener for "Ya, Reset" button in reset modal
+        document.getElementById('confirmResetBtn').addEventListener('click', function() {
+            const form = document.createElement('form');
+            form.method = 'POST'; // Assuming reset is handled via POST route
+            form.action = resetFormAction;
+            form.style.display = 'none';
 
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = '_token';
-                csrfInput.value = '{{ csrf_token() }}';
-                form.appendChild(csrfInput);
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = '{{ csrf_token() }}';
+            form.appendChild(csrfInput);
 
-                document.body.appendChild(form);
-                form.submit();
-            });
-        })(); // Akhir dari IIFE
+            // If your reset route expects a specific method like DELETE, add this:
+            // const methodInput = document.createElement('input');
+            // methodInput.type = 'hidden';
+            // methodInput.name = '_method';
+            // methodInput.value = 'DELETE'; // Or 'PUT', 'PATCH'
+            // form.appendChild(methodInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        });
     </script>
 @endsection

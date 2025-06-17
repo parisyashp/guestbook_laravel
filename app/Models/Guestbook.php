@@ -9,13 +9,11 @@ class Guestbook extends Model
 {
     use HasFactory;
 
-    // Nama tabel yang terkait dengan model ini.
-    // Laravel secara default akan menggunakan nama plural dari model (Guestbook -> guestbooks).
-    // Jadi, ini opsional jika nama tabel Anda memang 'guestbooks'.
+    // Tentukan nama tabel jika tidak sesuai dengan konvensi Laravel (plural dari nama model)
+    // Jika tabel Anda bernama 'guestbooks', baris ini opsional tapi bagus untuk kejelasan.
     protected $table = 'guestbooks';
 
-    // Properti fillable mendefinisikan kolom yang bisa diisi secara massal (mass assignable).
-    // Ini adalah fitur keamanan penting di Laravel.
+    // Tentukan kolom yang bisa diisi secara massal (mass assignable)
     protected $fillable = [
         'name',
         'email',
