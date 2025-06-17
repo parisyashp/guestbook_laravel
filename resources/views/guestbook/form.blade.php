@@ -254,8 +254,6 @@
     </div>
 
     <div class="right-section">
-        <h2>Isi Buku Tamu</h2>
-
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul class="mb-0">
