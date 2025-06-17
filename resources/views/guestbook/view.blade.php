@@ -226,6 +226,120 @@
             gap: 8px; /* Space between action buttons */
             justify-content: flex-start; /* Menggeser tombol ke kiri */
         }
+
+        /* Styling for the custom confirmation modal */
+        #confirmationModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        #confirmationModal > div {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        #confirmationModal p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+        /* Updated modal button styles to match .btn, then override specific colors */
+        #confirmationModal button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px; /* Consistent with other buttons */
+            cursor: pointer;
+            margin-right: 10px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Consistent with other buttons */
+        }
+        #confirmationModal #confirmDeleteBtn {
+            background-color: #e09090;
+            color: white;
+        }
+        #confirmationModal #confirmDeleteBtn:hover {
+            background-color: #d18282;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        #confirmationModal button:last-child {
+            background-color: #ccc;
+            color: #333;
+            margin-right: 0;
+        }
+        #confirmationModal button:last-child:hover {
+            background-color: #bbb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Styling for the custom confirmation modal for Reset Table (mirroring Delete modal styles) */
+        #resetConfirmationModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        #resetConfirmationModal > div {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        #resetConfirmationModal p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+        /* Updated modal button styles for reset modal as well */
+        #resetConfirmationModal button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px; /* Consistent with other buttons */
+            cursor: pointer;
+            margin-right: 10px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Consistent with other buttons */
+        }
+        #resetConfirmationModal #confirmResetBtn {
+            background-color: #e09090;
+            color: white;
+        }
+        #resetConfirmationModal #confirmResetBtn:hover {
+            background-color: #d18282;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        #resetConfirmationModal button:last-child {
+            background-color: #ccc;
+            color: #333;
+            margin-right: 0;
+        }
+        #resetConfirmationModal button:last-child:hover {
+            background-color: #bbb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
     </style>
 
     {{-- Header Bar --}}
@@ -238,15 +352,18 @@
             Kembali
         </a>
         <h2>Daftar Tamu</h2>
-        <form action="{{ route('guestbook.reset') }}" method="POST" style="display:inline-block; margin:0;">
+        {{-- Tombol Reset Tabel --}}
+        {{-- Pastikan Anda memiliki route 'guestbook.reset' dan method di controller Anda --}}
+        <form action="{{ route('guestbook.reset') }}" method="POST" style="display:inline;">
             @csrf
-            <button type="submit" class="btn btn-danger">Reset Tabel</button>
+            {{--@method('POST')--}} {{-- Atau DELETE jika route reset menggunakan DELETE --}}
+            <button type="button" class="btn btn-danger" onclick="showResetConfirmation('{{ route('guestbook.reset') }}')">Reset Tabel</button>
         </form>
     </div>
 
     {{-- Main content container --}}
     <div class="container">
-        @if (is_array($mergedGuestbookData) && count($mergedGuestbookData) > 0) {{-- Check if it's an array and not empty --}}
+        @if (isset($mergedGuestbookData) && $mergedGuestbookData->count() > 0)
             <div class="table-responsive">
                 <table class="table">
                     <thead>
@@ -259,20 +376,19 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($mergedGuestbookData as $index => $guestbookEntry)
+                        @foreach($mergedGuestbookData as $guestbookEntry)
                             <tr>
-                                <td>{{ $index + 1 }}</td>
-                                <td>{{ $guestbookEntry['name'] ?? '-' }}</td>
-                                <td>{{ $guestbookEntry['email'] ?? '-' }}</td>
-                                <td>{{ $guestbookEntry['message'] ?? '-' }}</td>
+                                <td>{{ $loop->iteration }}</td> {{-- Gunakan $loop->iteration untuk nomor urut --}}
+                                <td>{{ $guestbookEntry->name ?? '-' }}</td> {{-- Akses sebagai objek ->name --}}
+                                <td>{{ $guestbookEntry->email ?? '-' }}</td> {{-- Akses sebagai objek ->email --}}
+                                <td>{{ $guestbookEntry->message ?? '-' }}</td> {{-- Akses sebagai objek ->message --}}
                                 <td class="action-buttons">
-                                    {{-- Placeholder for Edit and Delete actions --}}
-                                    {{-- Implement actual edit/delete logic requiring database interaction --}}
-                                    <a href="{{ route('guestbook.edit', ['index' => $index]) }}" class="btn btn-info">Edit</a>
-                                    <form action="{{ route('guestbook.destroy', ['index' => $index]) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus entri ini?');" style="display:inline-block; margin:0;">
+                                    <a href="{{ route('guestbook.edit', $guestbookEntry->id) }}" class="btn btn-info">Edit</a> {{-- Gunakan $guestbookEntry->id --}}
+                                    {{-- Menggunakan modal konfirmasi kustom untuk hapus --}}
+                                    <form action="{{ route('guestbook.destroy', $guestbookEntry->id) }}" method="POST" style="display:inline;"> {{-- Gunakan $guestbookEntry->id --}}
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger">Hapus</button>
+                                        <button type="button" class="btn btn-danger" onclick="showDeleteConfirmation('{{ route('guestbook.destroy', $guestbookEntry->id) }}')">Hapus</button> {{-- Gunakan $guestbookEntry->id --}}
                                     </form>
                                 </td>
                             </tr>
@@ -286,4 +402,90 @@
             </div>
         @endif
     </div>
+
+    {{-- Custom Confirmation Modal for Delete --}}
+    <div id="confirmationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; max-width: 400px; width: 90%;">
+            <p style="font-size: 1.1em; margin-bottom: 20px;">Apakah Anda yakin ingin menghapus data ini?</p>
+            <button id="confirmDeleteBtn" class="btn btn-danger">Ya, Hapus</button>
+            <button onclick="hideDeleteConfirmation()" class="btn btn-secondary">Batal</button>
+        </div>
+    </div>
+
+    {{-- Custom Confirmation Modal for Reset Table --}}
+    <div id="resetConfirmationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; max-width: 400px; width: 90%;">
+            <p style="font-size: 1.1em; margin-bottom: 20px;">Apakah Anda yakin ingin me-reset seluruh tabel buku tamu?</p>
+            <button id="confirmResetBtn" class="btn btn-danger">Ya, Reset</button>
+            <button onclick="hideResetConfirmation()" class="btn btn-secondary">Batal</button>
+        </div>
+    </div>
+
+
+    <script>
+        // DIKOREKSI: Bungkus kode JavaScript dalam IIFE (Immediately Invoked Function Expression)
+        // untuk mencegah kesalahan deklarasi ulang variabel
+        (function() {
+            let deleteFormAction = '';
+            let resetFormAction = '';
+
+            window.showDeleteConfirmation = function(actionUrl) { // Jadikan global
+                deleteFormAction = actionUrl;
+                document.getElementById('confirmationModal').style.display = 'flex';
+            };
+
+            window.hideDeleteConfirmation = function() { // Jadikan global
+                document.getElementById('confirmationModal').style.display = 'none';
+            };
+
+            window.showResetConfirmation = function(actionUrl) { // Jadikan global
+                resetFormAction = actionUrl;
+                document.getElementById('resetConfirmationModal').style.display = 'flex';
+            };
+
+            window.hideResetConfirmation = function() { // Jadikan global
+                document.getElementById('resetConfirmationModal').style.display = 'none';
+            };
+
+            // Event listener for "Ya, Hapus" button in delete modal
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = deleteFormAction;
+                form.style.display = 'none';
+
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = '{{ csrf_token() }}';
+                form.appendChild(csrfInput);
+
+                const methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.value = 'DELETE';
+                form.appendChild(methodInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            });
+
+            // Event listener for "Ya, Reset" button in reset modal
+            document.getElementById('confirmResetBtn').addEventListener('click', function() {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = resetFormAction;
+                form.style.display = 'none';
+
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = '{{ csrf_token() }}';
+                form.appendChild(csrfInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            });
+        })(); // Akhir dari IIFE
+    </script>
 @endsection

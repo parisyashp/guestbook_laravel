@@ -22,14 +22,16 @@
 
     .card-container {
         background-color: rgba(255, 255, 255, 0.95); /* */
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        /* Slightly
+        transparent white card */
+        border-radius: 15px; /* */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* */
         display: flex;
-        width: 90%;
-        max-width: 800px;
-        overflow: hidden;
-        flex-direction: column;
-        align-items: stretch;
+        width: 90%; /* */
+        max-width: 800px; /* */
+        overflow: hidden; /* */
+        flex-direction: column; /* */
+        align-items: stretch; /* */
     }
 
     @media (min-width: 768px) {
@@ -212,6 +214,8 @@
         <img src="{{ asset('images/RSVP.png') }}" alt="RSVP Invitation">
     </div>
     <div class="right-section">
+        <h2>Edit Entri Buku Tamu</h2>
+
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul class="mb-0">
@@ -224,14 +228,14 @@
 
         {{-- Form action harus menggunakan $index, bukan $id --}}
         {{-- Method harus disesuaikan dengan route update di Guestbook Controller (PUT) --}}
-        <form action="{{ route('guestbook.update', $index) }}" method="POST">
+        <form action="{{ route('guestbook.update', $id) }}" method="POST">
             @csrf
-            @method('PUT') {{-- Ganti POST menjadi PUT agar sesuai dengan route --}}
+            @method('POST') {{-- Gunakan POST jika route Anda Route::post() --}}
             <div class="form-group">
                 <label for="name">Nama Lengkap:</label>
-                {{-- Menggunakan $entry['name'] karena controller melewatkan 'entry' --}}
+                
                 <input type="text" id="name" name="name" class="form-control"
-                    value="{{ old('name', $entry['name'] ?? '') }}" placeholder="Masukkan nama lengkap" required>
+                    value="{{ old('name', $entry->name ?? '') }}" placeholder="Masukkan nama lengkap" required>
                 @error('name')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
@@ -241,7 +245,7 @@
                 <label for="email">Email:</label>
                 {{-- Menggunakan $entry['email'] --}}
                 <input type="email" id="email" name="email" class="form-control"
-                    value="{{ old('email', $entry['email'] ?? '') }}" placeholder="Masukkan email Anda" required>
+                    value="{{ old('email', $entry->email ?? '') }}" placeholder="Masukkan email Anda" required>
                 @error('email')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
@@ -249,9 +253,9 @@
 
             <div class="form-group">
                 <label for="message">Pesan: </label>
-                {{-- Menggunakan $entry['message'] --}}
+                {{-- Menggunakan $entry->message --}}
                 <textarea id="message" name="message" class="form-control" rows="5" placeholder="Tuliskan pesan Anda"
-                    required>{{ old('message', $entry['message'] ?? '') }}</textarea>
+                    required>{{ old('message', $entry->message ?? '') }}</textarea>
                 @error('message')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
@@ -264,5 +268,4 @@
         </form>
     </div>
 </div>
-
 @endsection

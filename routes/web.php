@@ -14,29 +14,31 @@ use App\Http\Controllers\GuestbookController; //
 |
 */
 
+// Home page (setelah home.blade.php dipindahkan ke resources/views/guestbook/)
 Route::get('/', function () {
-    return view('home'); //
+    return view('guestbook.home'); //
 })->name('home'); //
 
-// HAPUS ATAU KOMENTARI BARIS INI:
-//Route::get('/guestbook-reset', function () {
-//     request()->session()->flush();
-//     return redirect()->route('guestbook.view');
-//})->name('guestbook.reset');
+// Form untuk membuat entri baru
+Route::get('/guestbook-create', [GuestbookController::class, 'showForm'])->name('guestbook.create'); //
 
-Route::get('/guestbook-create', [GuestbookController::class, 'showForm'])->name('guestbook.form'); //
+// Menampilkan semua entri buku tamu
 Route::get('/guestbook-view', [GuestbookController::class, 'viewGuestbook'])->name('guestbook.view'); //
+
+// Handle pengiriman form (akan menyimpan ke database)
 Route::post('/guestbook', [GuestbookController::class, 'submitForm'])->name('guestbook.submit'); //
+
+// Halaman hasil setelah submit form
 Route::get('/guestbook-result', [GuestbookController::class, 'viewGuestbookResult'])->name('guestbook.result'); //
 
-// *** PERUBAHAN DI SINI: {index} diubah menjadi {id} ***
+// Menampilkan form edit untuk entri tertentu (menggunakan ID database)
 Route::get('/guestbook/{id}/edit', [GuestbookController::class, 'edit'])->name('guestbook.edit'); //
-// UBAH DARI POST MENJADI PUT UNTUK OPERASI UPDATE YANG BENAR
-// *** PERUBAHAN DI SINI: {index} diubah menjadi {id} ***
-Route::put('/guestbook/{id}', [GuestbookController::class, 'update'])->name('guestbook.update'); // Menggunakan PUT untuk update, lebih sesuai RESTful
 
-// *** PERUBAHAN DI SINI: {index} diubah menjadi {id} ***
+// Memperbarui entri di database (menggunakan ID database dan POST method)
+Route::post('/guestbook/{id}', [GuestbookController::class, 'update'])->name('guestbook.update'); 
+
+// Menghapus entri dari database
 Route::delete('/guestbook/{id}', [GuestbookController::class, 'destroy'])->name('guestbook.destroy'); //
 
-// Ini adalah satu-satunya rute untuk reset yang kita inginkan:
+// Menghapus semua entri di database
 Route::post('/guestbook/reset', [GuestbookController::class, 'resetGuestbook'])->name('guestbook.reset'); //

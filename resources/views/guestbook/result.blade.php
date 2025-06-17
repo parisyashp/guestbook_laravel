@@ -246,7 +246,7 @@
         <a href="{{ route('guestbook.view') }}" class="btn btn-secondary">Lihat Buku Tamu</a>
     </div>
 
-    @if ($guestbookData)
+    @if (isset($guestbookData))
         <div class="table-responsive">
             <table class="table">
                 <thead>
@@ -255,7 +255,7 @@
                         <th>Nama Lengkap</th>
                         <th>Email</th>
                         <th>Pesan</th>
-                        {{-- <th>Aksi</th> --}}
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -266,17 +266,17 @@
                         <td>{{ $guestbookData['message'] ?? '-' }}</td>
                         <td class="action-buttons">
                             {{-- Tombol Edit --}}
-                            {{-- Menggunakan $lastSubmittedEntryIndex yang diteruskan dari controller --}}
-                            <a href="{{ route('guestbook.edit', $lastSubmittedEntryIndex) }}"
-                                class="btn btn-info">Edit</a>
+                            {{-- lastSubmittedEntryIndex sekarang adalah ID dari database --}}
+                            <a href="{{ route('guestbook.edit', $lastSubmittedEntryIndex) }}" class="btn btn-info">Edit</a>
+                            
                             {{-- Tombol Hapus (menggunakan form DELETE) --}}
-                            {{-- Menggunakan $lastSubmittedEntryIndex yang diteruskan dari controller --}}
                             <form action="{{ route('guestbook.destroy', $lastSubmittedEntryIndex) }}" method="POST"
                                 style="display:inline;">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-danger"
-                                    onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?');">Hapus</button>
+                                {{-- Menggunakan modal konfirmasi kustom --}}
+                                <button type="button" class="btn btn-danger"
+                                    onclick="showDeleteConfirmation('{{ route('guestbook.destroy', $lastSubmittedEntryIndex) }}')">Hapus</button>
                             </form>
                         </td>
                     </tr>
@@ -289,5 +289,90 @@
         </div>
     @endif
 </div>
+
+{{-- Custom Confirmation Modal for Delete --}}
+    <div id="confirmationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; max-width: 400px; width: 90%;">
+            <p style="font-size: 1.1em; margin-bottom: 20px;">Apakah Anda yakin ingin menghapus data ini?</p>
+            <button id="confirmDeleteBtn" class="btn btn-danger">Ya, Hapus</button>
+            <button onclick="hideDeleteConfirmation()" class="btn btn-secondary">Batal</button>
+        </div>
+    </div>
+
+    {{-- Custom Confirmation Modal for Reset Table --}}
+    <div id="resetConfirmationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; max-width: 400px; width: 90%;">
+            <p style="font-size: 1.1em; margin-bottom: 20px;">Apakah Anda yakin ingin me-reset seluruh tabel buku tamu?</p>
+            <button id="confirmResetBtn" class="btn btn-danger">Ya, Reset</button>
+            <button onclick="hideResetConfirmation()" class="btn btn-secondary">Batal</button>
+        </div>
+    </div>
+
+    <script>
+        // DIKOREKSI: Bungkus kode JavaScript dalam IIFE (Immediately Invoked Function Expression)
+        // untuk mencegah kesalahan deklarasi ulang variabel
+        (function() {
+            let deleteFormAction = '';
+            let resetFormAction = '';
+
+            window.showDeleteConfirmation = function(actionUrl) { // Jadikan global
+                deleteFormAction = actionUrl;
+                document.getElementById('confirmationModal').style.display = 'flex';
+            };
+
+            window.hideDeleteConfirmation = function() { // Jadikan global
+                document.getElementById('confirmationModal').style.display = 'none';
+            };
+
+            window.showResetConfirmation = function(actionUrl) { // Jadikan global
+                resetFormAction = actionUrl;
+                document.getElementById('resetConfirmationModal').style.display = 'flex';
+            };
+
+            window.hideResetConfirmation = function() { // Jadikan global
+                document.getElementById('resetConfirmationModal').style.display = 'none';
+            };
+
+            // Event listener for "Ya, Hapus" button in delete modal
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = deleteFormAction;
+                form.style.display = 'none';
+
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = '{{ csrf_token() }}';
+                form.appendChild(csrfInput);
+
+                const methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.value = 'DELETE';
+                form.appendChild(methodInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            });
+
+            // Event listener for "Ya, Reset" button in reset modal
+            document.getElementById('confirmResetBtn').addEventListener('click', function() {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = resetFormAction;
+                form.style.display = 'none';
+
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = '{{ csrf_token() }}';
+                form.appendChild(csrfInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            });
+        })(); // Akhir dari IIFE
+    </script>
 
 @endsection

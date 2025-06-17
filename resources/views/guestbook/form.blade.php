@@ -260,6 +260,7 @@
     <div class="right-section">
         {{-- Hapus judul "Form Tamu Undangan" --}}
         {{-- <h2>Form Tamu Undangan</h2> --}}
+        <h2>Isi Buku Tamu</h2> {{-- Menambahkan kembali judul H2 di sini --}}
 
         @if ($errors->any())
             <div class="alert alert-danger">
@@ -304,7 +305,7 @@
             <div class="button-group">
                 {{-- Assuming 'Kembali' button goes back to a home
                 page or previous page --}}
-                <a href="{{ url('/') }}" class="btn btn-secondary">Kembali</a>
+                <a href="{{ route('home') }}" class="btn btn-secondary">Kembali</a> {{-- Menggunakan route('home') --}} 
                 <button type="submit" class="btn btn-primary">Simpan</button>
             </div>
         </form>
