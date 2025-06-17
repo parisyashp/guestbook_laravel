@@ -391,7 +391,7 @@
                                         <button type="button" class="btn btn-danger" onclick="showDeleteConfirmation('{{ route('guestbook.destroy', $guestbookEntry->id) }}')">Hapus</button> {{-- Gunakan $guestbookEntry->id --}}
                                     </form> --}}
                                     <form action="{{ route('guestbook.reset') }}" method="POST">
-                                        @csrf <button type="submit" class="btn btn-danger">Reset Tabel</button>
+                                        @csrf <button type="button" class="btn btn-danger">Reset Tabel</button>
                                     </form>
                                 </td>
                             </tr>
