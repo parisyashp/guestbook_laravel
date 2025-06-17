@@ -78,6 +78,7 @@ jobs:
               -e DB_DATABASE=${{ secrets.DB_DATABASE }} \
               -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
               -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              -e DB_DSN="mysql:host=guestbook-db;port=3306;dbname=${{ secrets.DB_DATABASE }};charset=utf8mb4;sslmode=disable" \
               parisyashp31/guestbook-laravel:latest
             
             echo "Waiting for containers to fully start up (30 seconds)..."
