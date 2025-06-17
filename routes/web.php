@@ -41,7 +41,7 @@ Route::post('/guestbook/{id}', [GuestbookController::class, 'update'])->name('gu
 Route::delete('/guestbook/{id}', [GuestbookController::class, 'destroy'])->name('guestbook.destroy'); //
 
 // Menghapus semua entri di database
-Route::post('/guestbook/reset', [GuestbookController::class, 'resetGuestbook'])->name('guestbook.reset'); //
+//Route::post('/guestbook/reset', [GuestbookController::class, 'resetGuestbook'])->name('guestbook.reset'); //
 
 // Mengetest monitoring di sentry.io
 Route::get('/sentry-test', function () {
