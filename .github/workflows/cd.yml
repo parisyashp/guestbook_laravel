@@ -39,13 +39,19 @@ jobs:
             echo "Pulling MySQL Docker image: mysql:5.7"
             docker pull mysql:5.7
 
+            # Pull image PHPMyAdmin
+            echo "Pulling PHPMyAdmin Docker image: phpmyadmin/phpmyadmin:latest"
+            docker pull phpmyadmin/phpmyadmin:latest
+
             echo "Stopping and removing existing containers (if running)..."
             docker stop guestbook-app || true
             docker rm guestbook-app || true
             docker stop guestbook-db || true
             docker rm guestbook-db || true
+            docker stop phpmyadmin || true
+            docker rm phpmyadmin || true
 
-            #membuat jaringan custom
+            # membuat jaringan custom
             echo "Creating custom Docker network 'guestbook-network'..."
             docker network create guestbook-network || true
 
@@ -80,7 +86,18 @@ jobs:
               -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
               -e DB_DSN="mysql:host=guestbook-db;port=3306;dbname=${{ secrets.DB_DATABASE }};charset=utf8mb4;sslmode=disable" \
               parisyashp31/guestbook-laravel:latest
-            
+      
+            # Jalankan container PHPMyAdmin (TAMBAHKAN BAGIAN INI!)
+            echo "Running new PHPMyAdmin container named 'phpmyadmin'..."
+            docker run -d \
+              --name phpmyadmin \
+              --network guestbook-network \
+              -p 8080:80 \
+              -e PMA_HOST=guestbook-db \
+              -e PMA_PORT=3306 \
+              -e MYSQL_ROOT_PASSWORD=root_password \
+              phpmyadmin/phpmyadmin:latest  
+              
             echo "Waiting for containers to fully start up (30 seconds)..."
             sleep 30
             
@@ -91,3 +108,4 @@ jobs:
             docker exec guestbook-app php artisan db:seed --force
 
             echo "--- Deployment Selesai! ---"
+      
