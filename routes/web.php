@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\GuestbookController; // Pastikan ini ada dan benar
+use App\Http\Controllers\GuestbookController; //
 
 /*
 |--------------------------------------------------------------------------
@@ -16,29 +16,34 @@ use App\Http\Controllers\GuestbookController; // Pastikan ini ada dan benar
 
 // Home page (setelah home.blade.php dipindahkan ke resources/views/guestbook/)
 Route::get('/', function () {
-    return view('guestbook.home'); // Menampilkan view 'home' dari folder 'guestbook'
-})->name('home');
+    return view('guestbook.home'); //
+})->name('home'); //
 
 // Form untuk membuat entri baru
-Route::get('/guestbook-create', [GuestbookController::class, 'showForm'])->name('guestbook.create');
-
-// Handle pengiriman form (akan menyimpan ke database)
-Route::post('/guestbook', [GuestbookController::class, 'submitForm'])->name('guestbook.submit');
-
-// Halaman hasil setelah submit form
-Route::get('/guestbook-result', [GuestbookController::class, 'viewGuestbookResult'])->name('guestbook.result');
+Route::get('/guestbook-create', [GuestbookController::class, 'showForm'])->name('guestbook.create'); //
 
 // Menampilkan semua entri buku tamu
-Route::get('/guestbook-view', [GuestbookController::class, 'viewGuestbook'])->name('guestbook.view');
+Route::get('/guestbook-view', [GuestbookController::class, 'viewGuestbook'])->name('guestbook.view'); //
+
+// Handle pengiriman form (akan menyimpan ke database)
+Route::post('/guestbook', [GuestbookController::class, 'submitForm'])->name('guestbook.submit'); //
+
+// Halaman hasil setelah submit form
+Route::get('/guestbook-result', [GuestbookController::class, 'viewGuestbookResult'])->name('guestbook.result'); //
 
 // Menampilkan form edit untuk entri tertentu (menggunakan ID database)
-Route::get('/guestbook/{id}/edit', [GuestbookController::class, 'edit'])->name('guestbook.edit');
+Route::get('/guestbook/{id}/edit', [GuestbookController::class, 'edit'])->name('guestbook.edit'); //
 
 // Memperbarui entri di database (menggunakan ID database dan POST method)
-Route::post('/guestbook/{id}', [GuestbookController::class, 'update'])->name('guestbook.update');
+Route::post('/guestbook/{id}', [GuestbookController::class, 'update'])->name('guestbook.update'); 
 
-// Menghapus entri dari database (menggunakan ID database dan DELETE method)
-Route::delete('/guestbook/{id}', [GuestbookController::class, 'destroy'])->name('guestbook.destroy');
+// Menghapus entri dari database
+Route::delete('/guestbook/{id}', [GuestbookController::class, 'destroy'])->name('guestbook.destroy'); //
 
-// Menghapus semua entri di database (reset tabel, menggunakan POST method)
-Route::post('/guestbook/reset', [GuestbookController::class, 'resetGuestbook'])->name('guestbook.reset');
+// Menghapus semua entri di database
+Route::post('/guestbook/reset', [GuestbookController::class, 'resetGuestbook'])->name('guestbook.reset'); //
+
+// Mengetest monitoring di sentry.io
+Route::get('/sentry-test', function () {
+    throw new \Exception('Ini error dari ROUTE, bukan dari artisan test');
+});
