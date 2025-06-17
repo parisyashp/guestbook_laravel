@@ -417,7 +417,7 @@
         </div>
     </div>
 
-    {{-- Custom Confirmation Modal for Reset Table --}}
+    {{-- Custom Confirmation Modal for Reset Tabel --}}
     <div id="resetConfirmationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
         <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; max-width: 400px; width: 90%;">
             <p style="font-size: 1.1em; margin-bottom: 20px;">Apakah Anda yakin ingin me-reset seluruh tabel buku tamu?</p>
