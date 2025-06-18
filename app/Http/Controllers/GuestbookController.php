@@ -134,10 +134,10 @@ class GuestbookController extends Controller
     /**
      * Menghapus semua entri buku tamu dari database (reset tabel).
      */
-    public function resetGuestbook()
+    /*public function resetGuestbook()
     {
 
         Guestbook::truncate(); // Ini akan menghapus semua record dan me-reset auto-increment ID
         return redirect()->route('guestbook.view')->with('success', 'Tabel buku tamu berhasil di-reset.');
-    }
+    }*/
 }

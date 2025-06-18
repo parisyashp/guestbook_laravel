@@ -354,11 +354,11 @@
         <h2>Daftar Tamu</h2>
         {{-- Tombol Reset Tabel --}}
         {{-- Pastikan Anda memiliki route 'guestbook.reset' dan method di controller Anda --}}
-        <form action="{{ route('guestbook.reset') }}" method="POST" style="display:inline;">
-            @csrf
-            {{--@method('POST')--}} {{-- Atau DELETE jika route reset menggunakan DELETE --}}
-            <button type="button" class="btn btn-danger" onclick="showResetConfirmation('{{ route('guestbook.reset') }}')">Reset Tabel</button>
-        </form>
+        {{-- <form action="{{ route('guestbook.reset') }}" method="POST" style="display:inline;"> --}}
+            {{-- @csrf --}}
+            {{-- @method('POST')--}} {{-- Atau DELETE jika route reset menggunakan DELETE --}}
+            {{-- <button type="button" class="btn btn-danger" onclick="showResetConfirmation('{{ route('guestbook.reset') }}')">Reset Tabel</button> --}}
+        {{-- </form> --}}
     </div>
 
     {{-- Main content container --}}
@@ -390,9 +390,9 @@
                                         @method('DELETE')
                                         <button type="button" class="btn btn-danger" onclick="showDeleteConfirmation('{{ route('guestbook.destroy', $guestbookEntry->id) }}')">Hapus</button> {{-- Gunakan $guestbookEntry->id --}}
                                     </form> --}}
-                                    <form action="{{ route('guestbook.reset') }}" method="POST">
-                                        @csrf <button type="button" class="btn btn-danger">Reset Tabel</button>
-                                    </form>
+                                    {{--<form action="{{ route('guestbook.reset') }}" method="POST">--}}
+                                        {{--@csrf <button type="button" class="btn btn-danger">Reset Tabel</button>--}}
+                                    {{--</form>--}}
                                 </td>
                             </tr>
                         @endforeach
