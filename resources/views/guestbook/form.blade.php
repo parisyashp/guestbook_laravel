@@ -250,10 +250,18 @@
 
 <div class="card-container">
     <div class="left-section">
+        {{-- This is where you'd put the RSVP image. --}}
+        {{-- Make sure you have an image like image_f443d8.jpg
+        in your public/images directory and rename it to
+        'RSVP.png' --}}
         <img src="{{ asset('images/RSVP.png') }}" alt="RSVP Invitation">
     </div>
 
     <div class="right-section">
+        {{-- Hapus judul "Form Tamu Undangan" --}}
+        {{-- <h2>Form Tamu Undangan</h2> --}}
+        <h2>Isi Buku Tamu</h2> {{-- Menambahkan kembali judul H2 di sini --}}
+
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul class="mb-0">
@@ -264,12 +272,13 @@
             </div>
         @endif
 
-        <form action="{{ route('guestbook.submit') }}" method="POST">
+        <form method="POST" action="{{ route('guestbook.submit') }}">
             @csrf
             <div class="form-content">
                 <div class="form-group">
                     <label for="name">Nama Lengkap:</label>
-                    <input type="text" id="name" name="name" class="form-control" value="{{ old('name') }}" placeholder="Masukkan nama lengkap" required>
+                    <input type="text" id="name" name="name" value="{{ old('name') }}"
+                        placeholder="Masukkan nama lengkap">
                     @error('name')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
@@ -277,7 +286,8 @@
 
                 <div class="form-group">
                     <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" class="form-control" value="{{ old('email') }}" placeholder="Masukkan email Anda" required>
+                    <input type="email" id="email" name="email" value="{{ old('email') }}"
+                        placeholder="Masukkan Email Anda">
                     @error('email')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
@@ -285,7 +295,7 @@
 
                 <div class="form-group">
                     <label for="message">Pesan:</label>
-                    <textarea id="message" name="message" class="form-control" rows="5" placeholder="Tuliskan pesan Anda" required>{{ old('message') }}</textarea>
+                    <textarea id="message" name="message" placeholder="Tuliskan pesan Anda">{{ old('message') }}</textarea>
                     @error('message')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
@@ -293,7 +303,9 @@
             </div>
 
             <div class="button-group">
-                <a href="{{ route('home') }}" class="btn btn-secondary">Kembali</a>
+                {{-- Assuming 'Kembali' button goes back to a home
+                page or previous page --}}
+                <a href="{{ route('home') }}" class="btn btn-secondary">Kembali</a> {{-- Menggunakan route('home') --}} 
                 <button type="submit" class="btn btn-primary">Simpan</button>
             </div>
         </form>

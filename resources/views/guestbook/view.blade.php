@@ -340,7 +340,6 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
-
     </style>
 
     {{-- Header Bar --}}
@@ -353,14 +352,13 @@
             Kembali
         </a>
         <h2>Daftar Tamu</h2>
-
         {{-- Tombol Reset Tabel --}}
         {{-- Pastikan Anda memiliki route 'guestbook.reset' dan method di controller Anda --}}
-        {{-- <form action="{{ route('guestbook.reset') }}" method="POST" style="display:inline;"> --}}
-            {{-- @csrf --}}
-            {{-- @method('POST')--}} {{-- Atau DELETE jika route reset menggunakan DELETE --}}
-            {{-- <button type="button" class="btn btn-danger" onclick="showResetConfirmation('{{ route('guestbook.reset') }}')">Reset Tabel</button> --}}
-        {{-- </form> --}}
+        <form action="{{ route('guestbook.reset') }}" method="POST" style="display:inline;">
+            @csrf
+            {{--@method('POST')--}} {{-- Atau DELETE jika route reset menggunakan DELETE --}}
+            <button type="button" class="btn btn-danger" onclick="showResetConfirmation('{{ route('guestbook.reset') }}')">Reset Tabel</button>
+        </form>
     </div>
 
     {{-- Main content container --}}
@@ -387,12 +385,14 @@
                                 <td class="action-buttons">
                                     <a href="{{ route('guestbook.edit', $guestbookEntry->id) }}" class="btn btn-info">Edit</a> {{-- Gunakan $guestbookEntry->id --}}
                                     {{-- Menggunakan modal konfirmasi kustom untuk hapus --}}
-                                    <form action="{{ route('guestbook.destroy', $guestbookEntry->id) }}" method="POST" style="display:inline;"> {{-- Gunakan $guestbookEntry->id --}}
+                                    {{-- <form action="{{ route('guestbook.destroy', $guestbookEntry->id) }}" method="POST" style="display:inline;"> {{-- Gunakan $guestbookEntry->id --}}
                                         @csrf
                                         @method('DELETE')
                                         <button type="button" class="btn btn-danger" onclick="showDeleteConfirmation('{{ route('guestbook.destroy', $guestbookEntry->id) }}')">Hapus</button> {{-- Gunakan $guestbookEntry->id --}}
+                                    </form> --}}
+                                    <form action="{{ route('guestbook.reset') }}" method="POST">
+                                        @csrf <button type="button" class="btn btn-danger">Reset Tabel</button>
                                     </form>
-
                                 </td>
                             </tr>
                         @endforeach

@@ -42,8 +42,3 @@ Route::delete('/guestbook/{id}', [GuestbookController::class, 'destroy'])->name(
 
 // Menghapus semua entri di database
 //Route::post('/guestbook/reset', [GuestbookController::class, 'resetGuestbook'])->name('guestbook.reset'); //
-
-// Mengetest monitoring di sentry.io
-Route::get('/sentry-test', function () {
-    throw new \Exception('Ini error dari ROUTE, bukan dari artisan test');
-});
