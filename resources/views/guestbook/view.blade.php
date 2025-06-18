@@ -385,11 +385,11 @@
                                 <td class="action-buttons">
                                     <a href="{{ route('guestbook.edit', $guestbookEntry->id) }}" class="btn btn-info">Edit</a> {{-- Gunakan $guestbookEntry->id --}}
                                     {{-- Menggunakan modal konfirmasi kustom untuk hapus --}}
-                                    {{-- <form action="{{ route('guestbook.destroy', $guestbookEntry->id) }}" method="POST" style="display:inline;"> {{-- Gunakan $guestbookEntry->id --}}
+                                    <form action="{{ route('guestbook.destroy', $guestbookEntry->id) }}" method="POST" style="display:inline;"> {{-- Gunakan $guestbookEntry->id --}}
                                         @csrf
                                         @method('DELETE')
                                         <button type="button" class="btn btn-danger" onclick="showDeleteConfirmation('{{ route('guestbook.destroy', $guestbookEntry->id) }}')">Hapus</button> {{-- Gunakan $guestbookEntry->id --}}
-                                    </form> --}}
+                                    </form> 
                                     {{--<form action="{{ route('guestbook.reset') }}" method="POST">--}}
                                         {{--@csrf <button type="button" class="btn btn-danger">Reset Tabel</button>--}}
                                     {{--</form>--}}
