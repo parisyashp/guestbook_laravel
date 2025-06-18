@@ -340,25 +340,6 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
-
-        /* CSS baru untuk ikon sort di header tabel */
-        .table th a {
-            display: flex; /* Untuk menyejajarkan teks dan ikon */
-            align-items: center; /* Pusat secara vertikal */
-            justify-content: center; /* Pusat secara horizontal untuk header 'Nama Lengkap' */
-            gap: 5px; /* Jarak antara teks dan ikon */
-        }
-        .table th:nth-child(2) a { /* Hanya untuk Nama Lengkap */
-            justify-content: flex-start; /* Menggeser ke kiri */
-        }
-        .table th:nth-child(1) a { /* Pastikan No juga di tengah jika diperlukan */
-            justify-content: center;
-        }
-
-        .sort-icon {
-            font-size: 0.8em; /* Ukuran ikon panah */
-            vertical-align: middle; /* Posisikan vertikal */
-        }
     </style>
 
     {{-- Header Bar --}}
@@ -388,16 +369,7 @@
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>
-                                <a href="{{ route('guestbook.view', ['sort' => ($sortBy == 'name_asc' ? 'name_desc' : 'name_asc')]) }}" style="text-decoration: none; color: inherit;">
-                                    Nama Lengkap
-                                    @if ($sortBy == 'name_asc')
-                                        <span class="sort-icon">&#9650;</span> {{-- Panah ke atas (▲) --}}
-                                    @elseif ($sortBy == 'name_desc')
-                                        <span class="sort-icon">&#9660;</span> {{-- Panah ke bawah (▼) --}}
-                                    @endif
-                                </a>
-                            </th>
+                            <th>Nama Lengkap</th>
                             <th>Email</th>
                             <th>Pesan</th>
                             <th>Aksi</th>
@@ -431,15 +403,6 @@
             <div class="alert alert-info">
                 Belum ada data di buku tamu.
             </div>
-        @endif
-    </div>
-
-    {{-- Tambahkan bagian ini untuk menampilkan jumlah data --}}
-    <div class="data-summary" style="margin-top: 20px; text-align: center; font-size: 1.1em; color: #555;">
-        @if (isset($mergedGuestbookData))
-            Total data: <span style="font-weight: bold; color: #333;">{{ $mergedGuestbookData->count() }}</span>
-        @else
-            Total data: <span style="font-weight: bold; color: #333;">0</span>
         @endif
     </div>
 
