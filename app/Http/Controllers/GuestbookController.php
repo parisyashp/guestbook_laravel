@@ -55,13 +55,39 @@ class GuestbookController extends Controller
     /**
      * Menampilkan semua entri buku tamu dari database.
      */
-    public function viewGuestbook()
+    public function viewGuestbook(Request $request)
     {
-        // Ambil semua entri dari tabel guestbooks di database (menggunakan model Guestbook)
-        $guestbookEntries = Guestbook::all();
+        // Ambil semua entri dari tabel guestbooks di database
+        $guestbookEntries = Guestbook::query(); // Menggunakan model Guestbook untuk mengambil semua data
 
-        // Gunakan nama variabel yang konsisten dengan view Anda
-        return view('guestbook.view', ['mergedGuestbookData' => $guestbookEntries]);
+        // Dapatkan parameter 'sort' dari URL, default ke 'name_asc' jika tidak ada
+        $sortBy = $request->query('sort', 'name_asc'); // Default sort by name ascending
+
+        // Lakukan pengurutan berdasarkan parameter 'sort'
+        switch ($sortBy) {
+            case 'name_asc':
+                $guestbookEntries->orderBy('name', 'asc');
+                break;
+            case 'name_desc':
+                $guestbookEntries->orderBy('name', 'desc');
+                break;
+            // Anda bisa menambahkan opsi sort lain di sini, contoh:
+            // case 'email_asc':
+            //     $guestbookEntries->orderBy('email', 'asc');
+            //     break;
+            // case 'latest': // Berdasarkan created_at terbaru
+            //     $guestbookEntries->orderBy('created_at', 'desc');
+            //     break;
+            default:
+                $guestbookEntries->orderBy('name', 'asc'); // Fallback default
+                break;
+        }
+
+        // Eksekusi query untuk mendapatkan data
+        $mergedGuestbookData = $guestbookEntries->get();
+
+        // Teruskan data ke view
+        return view('guestbook.view', compact('mergedGuestbookData', 'sortBy'));
     }
 
     /**
