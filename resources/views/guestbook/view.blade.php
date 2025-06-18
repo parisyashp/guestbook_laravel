@@ -434,6 +434,15 @@
         @endif
     </div>
 
+    {{-- Tambahkan bagian ini untuk menampilkan jumlah data --}}
+    <div class="data-summary" style="margin-top: 20px; text-align: center; font-size: 1.1em; color: #555;">
+        @if (isset($mergedGuestbookData))
+            Total data: <span style="font-weight: bold; color: #333;">{{ $mergedGuestbookData->count() }}</span>
+        @else
+            Total data: <span style="font-weight: bold; color: #333;">0</span>
+        @endif
+    </div>
+
     {{-- Custom Confirmation Modal for Delete --}}
     <div id="confirmationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
         <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; max-width: 400px; width: 90%;">
